@@ -37,6 +37,12 @@ class IntelligencePipeline:
                 self._modules['find'] = AuraFind()
             return self._modules['find'].analyze(text=text, file_path=filename, url=url)
             
+        elif module_slug == 'life':
+            if 'life' not in self._modules:
+                from intelligence.modules.life import AuraLife
+                self._modules['life'] = AuraLife()
+            return self._modules['life'].analyze(text=text, file_path=filename, url=url)
+            
         else:
             return AnalysisResult(
                 module_name=f"AURA {module_slug.capitalize()}",

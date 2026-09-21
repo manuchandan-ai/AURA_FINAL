@@ -44,14 +44,10 @@ class IntelligencePipeline:
             return self._modules['life'].analyze(text=text, file_path=filename, url=url)
             
         else:
-            return AnalysisResult(
-                module_name=f"AURA {module_slug.capitalize()}",
-                confidence=50.0,
-                decision="Analysis Complete",
-                explanation="General analysis performed using fallback heuristics.",
-                signals=[{'name': 'Generic Analysis', 'type': 'info'}],
-                raw_data={'mock': True}
-            )
+            if 'investigate' not in self._modules:
+                from intelligence.modules.investigate import AuraInvestigate
+                self._modules['investigate'] = AuraInvestigate()
+            return self._modules['investigate'].analyze(text=text, file_path=filename, url=url)
 
     def process(self, user_id: int, text: str = None, file_path: str = None, filename: str = None, url: str = None) -> dict:
         """Run the full intelligence pipeline on the user's input.

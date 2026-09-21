@@ -77,6 +77,24 @@ def register():
                 profile_data['pincode'] = pincode
             if country:
                 profile_data['country'] = country
+                
+            # Handle profile photo upload
+            photo_file = request.files.get('profile_photo')
+            if photo_file and photo_file.filename:
+                from werkzeug.utils import secure_filename
+                import os
+                import uuid
+                from flask import current_app
+                
+                # Make sure profiles folder exists
+                profile_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profiles')
+                os.makedirs(profile_folder, exist_ok=True)
+                
+                ext = photo_file.filename.rsplit('.', 1)[1].lower() if '.' in photo_file.filename else 'jpg'
+                filename = f"{uuid.uuid4().hex}.{ext}"
+                filepath = os.path.join(profile_folder, filename)
+                photo_file.save(filepath)
+                profile_data['profile_photo'] = f"/uploads/profiles/{filename}"
 
             if profile_data:
                 update_user_profile(user_id, **profile_data)
@@ -85,7 +103,7 @@ def register():
             return redirect(url_for('auth.login'))
 
         except Exception as e:
-            flash('Registration failed. Please try again.', 'danger')
+            flash(f'Registration failed: {str(e)}', 'danger')
             return render_template('register.html',
                                    form_data=request.form)
 
@@ -128,6 +146,12 @@ def login():
         session['user_email'] = user['email']
         session['user_role'] = user['role']
         session['user_status'] = user['status']
+        
+        # Load profile photo into session
+        user_profile = get_user_profile(user['id'])
+        if user_profile and user_profile['profile_photo']:
+            session['profile_photo'] = user_profile['profile_photo']
+            
         session.permanent = True
 
         # Redirect based on status
@@ -187,8 +211,27 @@ def profile():
         for field in ['address', 'city', 'state', 'pincode', 'country', 'bio']:
             val = request.form.get(field, '').strip()
             profile_data[field] = val if val else None
+            
+        # Handle profile photo upload
+        photo_file = request.files.get('profile_photo')
+        if photo_file and photo_file.filename:
+            import os
+            import uuid
+            from flask import current_app
+            
+            profile_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profiles')
+            os.makedirs(profile_folder, exist_ok=True)
+            
+            ext = photo_file.filename.rsplit('.', 1)[1].lower() if '.' in photo_file.filename else 'jpg'
+            filename = f"{uuid.uuid4().hex}.{ext}"
+            filepath = os.path.join(profile_folder, filename)
+            photo_file.save(filepath)
+            photo_url = f"/uploads/profiles/{filename}"
+            profile_data['profile_photo'] = photo_url
+            session['profile_photo'] = photo_url
 
-        update_user_profile(session['user_id'], **profile_data)
+        if profile_data:
+            update_user_profile(session['user_id'], **profile_data)
 
         flash('Profile updated successfully!', 'success')
         return redirect(url_for('auth.profile'))

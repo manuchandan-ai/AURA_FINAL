@@ -8,7 +8,7 @@
                 <h4 class="aura-gradient-text mb-2">Create Your Account</h4>
                 <p class="text-secondary">Join the AURA Intelligence Platform</p>
             </div>
-            <form method="POST" action="{{ url_for('auth.register') }}">
+            <form method="POST" action="{{ url_for('auth.register') }}" enctype="multipart/form-data">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="name" class="form-label text-secondary">Full Name</label>
@@ -34,6 +34,13 @@
                         <label for="confirm_password" class="form-label text-secondary">Confirm Password</label>
                         <input type="password" class="form-control aura-glass-input" id="confirm_password" name="confirm_password" required>
                     </div>
+                </div>
+
+                <hr class="my-4 border-secondary">
+                <h6 class="text-secondary mb-3">Profile Photo</h6>
+                <div class="mb-4">
+                    <input type="file" class="form-control aura-glass-input" id="profile_photo" name="profile_photo" accept="image/*">
+                    <div class="form-text text-secondary">Optional. Upload a profile picture (JPG, PNG).</div>
                 </div>
 
                 <hr class="my-4 border-secondary">

@@ -59,8 +59,13 @@
                         <a href="{{ url_for('auth.history') }}" class="btn aura-btn-ghost btn-sm">
                             <i class="bi bi-clock-history"></i> History
                         </a>
-                        <a href="{{ url_for('auth.profile') }}" class="btn aura-btn-ghost btn-sm">
-                            <i class="bi bi-person-circle"></i> {{ session.get('user_name', 'Profile') }}
+                        <a href="{{ url_for('auth.profile') }}" class="btn aura-btn-ghost btn-sm d-flex align-items-center gap-2">
+                            {% if session.get('profile_photo') %}
+                                <img src="{{ session.get('profile_photo') }}" alt="Profile" class="rounded-circle border border-secondary" style="width: 24px; height: 24px; object-fit: cover;">
+                            {% else %}
+                                <i class="bi bi-person-circle"></i> 
+                            {% endif %}
+                            {{ session.get('user_name', 'Profile') }}
                         </a>
                         <a href="{{ url_for('auth.logout') }}" class="btn aura-btn-outline btn-sm">Logout</a>
                     {% else %}

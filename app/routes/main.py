@@ -25,3 +25,10 @@ def health():
 def about():
     """Render the about page."""
     return render_template('home.html')  # Temporary - will get its own template later
+
+@main_bp.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    """Serve uploaded files."""
+    from flask import send_from_directory
+    import os
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)

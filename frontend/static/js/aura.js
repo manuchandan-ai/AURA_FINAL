@@ -214,9 +214,11 @@ document.addEventListener('DOMContentLoaded', () => {
             analyzeBtn.disabled = true;
             
             try {
-                // Prepare form data (simulate for now since API isn't fully built for files)
+                // Prepare form data
                 const formData = new FormData();
                 formData.append('text', textContent);
+                if (urlContent) formData.append('url', urlContent);
+                if (hasFile) formData.append('file', fileUpload.files[0]);
                 
                 const response = await fetch('/api/analyze', {
                     method: 'POST',

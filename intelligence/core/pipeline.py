@@ -26,16 +26,11 @@ class IntelligencePipeline:
             return self._modules['trust'].analyze(text=text, file_path=filename, url=url)
             
         elif module_slug == 'verify':
-            return AnalysisResult(
-                module_name="AURA Verify",
-                confidence=85.0,
-                decision="Document Appears Authentic",
-                explanation="Standard structure and watermarks detected. No visible tampering signs.",
-                signals=[
-                    {'name': 'Format Match', 'type': 'success'}
-                ],
-                raw_data={'mock': True}
-            )
+            if 'verify' not in self._modules:
+                from intelligence.modules.verify import AuraVerify
+                self._modules['verify'] = AuraVerify()
+            return self._modules['verify'].analyze(text=text, file_path=filename, url=url)
+            
         elif module_slug == 'find':
             return AnalysisResult(
                 module_name="AURA Find",

@@ -50,7 +50,7 @@ def route_input(text: str = None, filename: str = None, url: str = None) -> str:
             return 'trust'
             
         # Verify keywords
-        if any(keyword in cleaned_text for keyword in ['verify', 'authentic', 'real or fake', 'certificate']):
+        if any(keyword in cleaned_text for keyword in ['verify', 'authentic', 'real or fake', 'certificate', 'identity card', 'id no', 'passport']):
             return 'verify'
             
         # Find keywords

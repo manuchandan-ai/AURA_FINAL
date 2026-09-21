@@ -190,26 +190,86 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     if (analyzeBtn && resultsArea) {
-        analyzeBtn.addEventListener('click', () => {
+        analyzeBtn.addEventListener('click', async () => {
+            const textContent = textInput ? textInput.value : '';
+            const hasFile = fileUpload && fileUpload.files.length > 0;
+            const urlContent = document.getElementById('url-input') ? document.getElementById('url-input').value : '';
+            
+            if (!textContent && !hasFile && !urlContent) {
+                alert('Please provide text, a file, or a URL to analyze.');
+                return;
+            }
+            
             resultsArea.classList.remove('d-none');
             resultsArea.innerHTML = `
-                <div class="d-flex align-items-center mb-3">
-                    <div class="spinner-border spinner-border-sm text-info me-3" role="status"></div>
-                    <span class="text-info fw-bold">Intelligence Core initializing...</span>
+                <div class="d-flex align-items-center justify-content-center p-5">
+                    <div class="spinner-border text-info me-3" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <div class="text-start">
+                        <h4 class="text-info mb-1">Intelligence Core Active</h4>
+                        <div class="text-secondary small">Routing to optimal module...</div>
+                    </div>
                 </div>
             `;
             
             analyzeBtn.disabled = true;
             
-            setTimeout(() => {
-                resultsArea.innerHTML = `
-                    <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success mb-0">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        System ready. Full analysis capabilities will be available after Stage 6 activation.
-                    </div>
-                `;
+            try {
+                // Prepare form data (simulate for now since API isn't fully built for files)
+                const formData = new FormData();
+                formData.append('text', textContent);
+                
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Calculate degree for score ring (e.g. 92% = 331deg)
+                    const deg = (data.confidence / 100) * 360;
+                    
+                    let signalsHtml = '';
+                    if (data.signals && data.signals.length > 0) {
+                        signalsHtml = data.signals.map(s => 
+                            `<span class="aura-signal-badge ${s.type}"><i class="bi bi-tag-fill"></i> ${s.name}</span>`
+                        ).join('');
+                    }
+                    
+                    resultsArea.innerHTML = `
+                        <div class="aura-result-card aura-fade-in visible">
+                            <div class="d-flex justify-content-between align-items-start mb-4">
+                                <div>
+                                    <h6 class="text-secondary text-uppercase tracking-wide mb-1">Detected Module</h6>
+                                    <h4 class="text-white mb-0"><i class="bi bi-cpu text-primary me-2"></i>${data.module}</h4>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="text-end">
+                                        <div class="text-white fw-bold fs-5">${data.decision}</div>
+                                        <div class="text-secondary small">Confidence</div>
+                                    </div>
+                                    <div class="aura-score-ring" style="--score-deg: ${deg}deg">
+                                        <span>${data.confidence}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${signalsHtml ? `<div class="mb-4 d-flex flex-wrap gap-2">${signalsHtml}</div>` : ''}
+                            
+                            <div class="aura-explanation-box">
+                                <strong>Explanation:</strong> ${data.explanation}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultsArea.innerHTML = `<div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger">${data.message || 'Analysis failed.'}</div>`;
+                }
+            } catch (error) {
+                console.error('Analysis error:', error);
+                resultsArea.innerHTML = `<div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger">Network error connecting to AURA Core.</div>`;
+            } finally {
                 analyzeBtn.disabled = false;
-            }, 1500);
+            }
         });
     }
 

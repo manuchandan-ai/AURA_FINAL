@@ -527,3 +527,75 @@ h1, h2, h3, h4, h5, h6 {
         animation: none;
     }
 }
+
+/* =========================================
+   Analysis Results UI
+   ========================================= */
+.aura-result-card {
+    background: rgba(10, 10, 26, 0.7);
+    border: 1px solid var(--aura-glass-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.aura-result-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 4px; height: 100%;
+    background: var(--aura-grad-accent);
+}
+
+.aura-score-ring {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    background: conic-gradient(var(--aura-accent-cyan) var(--score-deg, 0deg), rgba(255,255,255,0.1) 0deg);
+}
+.aura-score-ring::after {
+    content: '';
+    position: absolute;
+    width: 66px;
+    height: 66px;
+    background: var(--aura-bg-primary);
+    border-radius: 50%;
+}
+.aura-score-ring span {
+    position: relative;
+    z-index: 2;
+}
+
+.aura-signal-badge {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--aura-text-secondary);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.aura-signal-badge.danger { border-color: var(--aura-danger); color: var(--aura-danger); }
+.aura-signal-badge.warning { border-color: var(--aura-warning); color: var(--aura-warning); }
+.aura-signal-badge.success { border-color: var(--aura-success); color: var(--aura-success); }
+.aura-signal-badge.info { border-color: var(--aura-accent-cyan); color: var(--aura-accent-cyan); }
+
+.aura-explanation-box {
+    background: rgba(255,255,255,0.02);
+    border-left: 3px solid rgba(255,255,255,0.2);
+    padding: 1rem;
+    border-radius: 0 8px 8px 0;
+    color: var(--aura-text-primary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}

@@ -62,7 +62,7 @@ def route_input(text: str = None, filename: str = None, url: str = None) -> str:
             return 'life'
             
         # Heritage keywords
-        if any(keyword in cleaned_text for keyword in ['history', 'monument', 'temple', 'artifact', 'ancient']):
+        if any(keyword in cleaned_text for keyword in ['history', 'monument', 'temple', 'artifact', 'ancient', 'pyramid', 'hieroglyph', 'ruins']):
             return 'heritage'
             
     # Default fallback

@@ -43,6 +43,12 @@ class IntelligencePipeline:
                 self._modules['life'] = AuraLife()
             return self._modules['life'].analyze(text=text, file_path=filename, url=url)
             
+        elif module_slug == 'heritage':
+            if 'heritage' not in self._modules:
+                from intelligence.modules.heritage import AuraHeritage
+                self._modules['heritage'] = AuraHeritage()
+            return self._modules['heritage'].analyze(text=text, file_path=filename, url=url)
+            
         else:
             if 'investigate' not in self._modules:
                 from intelligence.modules.investigate import AuraInvestigate

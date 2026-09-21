@@ -56,6 +56,9 @@
                                 <i class="bi bi-gear"></i> Admin
                             </a>
                         {% endif %}
+                        <a href="{{ url_for('auth.history') }}" class="btn aura-btn-ghost btn-sm">
+                            <i class="bi bi-clock-history"></i> History
+                        </a>
                         <a href="{{ url_for('auth.profile') }}" class="btn aura-btn-ghost btn-sm">
                             <i class="bi bi-person-circle"></i> {{ session.get('user_name', 'Profile') }}
                         </a>

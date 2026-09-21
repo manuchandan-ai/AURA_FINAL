@@ -194,3 +194,9 @@ def profile():
         return redirect(url_for('auth.profile'))
 
     return render_template('profile.html', user=user, profile=user_profile)
+
+@auth_bp.route('/history')
+@login_required
+def history():
+    """View user analysis history."""
+    return render_template('history.html')

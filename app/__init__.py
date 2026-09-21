@@ -50,3 +50,6 @@ def _register_blueprints(app):
 
     from app.routes.admin import admin_bp
     app.register_blueprint(admin_bp)
+
+    from app.routes.api import api_bp
+    app.register_blueprint(api_bp)

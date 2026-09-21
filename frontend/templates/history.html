@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis History — AURA{% endblock %}
+
+{% block content %}
+<section class="pt-5 mt-5 pb-5 min-vh-100">
+    <div class="container px-4 px-lg-5">
+        <div class="text-center mb-5 aura-fade-in visible">
+            <h2 class="aura-gradient-text d-inline-block">Analysis History</h2>
+            <p class="text-secondary mt-2">Your past investigations and verifications.</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="aura-glass p-0 overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-borderless align-middle mb-0" style="background: transparent;">
+                            <thead class="bg-dark bg-opacity-50">
+                                <tr class="text-secondary border-bottom border-secondary">
+                                    <th class="ps-4 py-3">Date</th>
+                                    <th>Input Summary</th>
+                                    <th>Module</th>
+                                    <th>Confidence</th>
+                                    <th class="pe-4 text-end">Decision</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="spinner-border text-info" role="status"></div>
+                                        <div class="text-secondary mt-2">Loading history...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/history');
+        const data = await response.json();
+        
+        const tbody = document.getElementById('history-tbody');
+        
+        if (data.status === 'success' && data.history.length > 0) {
+            tbody.innerHTML = data.history.map(item => {
+                let badgeClass = 'secondary';
+                if (item.decision.toLowerCase().includes('high risk') || item.decision.toLowerCase().includes('fake')) {
+                    badgeClass = 'danger';
+                } else if (item.decision.toLowerCase().includes('authentic') || item.decision.toLowerCase().includes('safe')) {
+                    badgeClass = 'success';
+                } else if (item.decision.toLowerCase().includes('warning') || item.decision.toLowerCase().includes('potential')) {
+                    badgeClass = 'warning';
+                }
+                
+                let iconClass = 'bi-file-text';
+                if (item.input_type === 'url') iconClass = 'bi-link-45deg';
+                else if (item.input_type === 'image') iconClass = 'bi-image';
+                else if (item.input_type === 'document') iconClass = 'bi-file-earmark-pdf';
+                
+                return `
+                    <tr class="border-bottom border-secondary border-opacity-25">
+                        <td class="ps-4 py-3 text-secondary small">${item.date || 'Unknown'}</td>
+                        <td>
+                            <i class="bi ${iconClass} text-secondary me-2"></i>
+                            <span class="text-white">${item.input_summary}</span>
+                        </td>
+                        <td><span class="badge bg-secondary border border-light">${item.module}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="me-2 text-white small">${item.confidence}%</span>
+                                <div class="progress flex-grow-1" style="height: 4px; max-width: 50px;">
+                                    <div class="progress-bar bg-info" style="width: ${item.confidence}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <span class="badge bg-${badgeClass} bg-opacity-25 text-${badgeClass} border border-${badgeClass}">${item.decision}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <i class="bi bi-clock-history text-secondary display-4 d-block mb-3"></i>
+                        <p class="text-secondary mb-0">No analysis history found.</p>
+                        <a href="/" class="btn btn-outline-info btn-sm mt-3">Start an Analysis</a>
+                    </td>
+                </tr>
+            `;
+        }
+    } catch (error) {
+        console.error('Error fetching history:', error);
+        document.getElementById('history-tbody').innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-5 text-danger">
+                    Failed to load history. Please try again later.
+                </td>
+            </tr>
+        `;
+    }
+});
+</script>
+{% endblock %}

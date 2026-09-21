@@ -1,0 +1,76 @@
+{% extends 'admin/layout.html' %}
+
+{% block admin_content %}
+<div class="mb-4">
+    <h2 class="aura-gradient-text d-inline-block">System Dashboard</h2>
+    <p class="text-secondary">Overview of AURA platform activity.</p>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="aura-glass p-4 text-center h-100">
+            <h1 class="display-4 text-white mb-0">{{ stats['total_users'] }}</h1>
+            <p class="text-secondary mb-0">Total Users</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="aura-glass p-4 text-center h-100 border-warning">
+            <h1 class="display-4 text-warning mb-0">{{ stats['pending_users'] }}</h1>
+            <p class="text-secondary mb-0">Pending Approvals</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="aura-glass p-4 text-center h-100 border-success">
+            <h1 class="display-4 text-success mb-0">{{ stats['approved_users'] }}</h1>
+            <p class="text-secondary mb-0">Active Users</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="aura-glass p-4 text-center h-100 border-info">
+            <h1 class="display-4 text-info mb-0">{{ stats['total_analyses'] }}</h1>
+            <p class="text-secondary mb-0">Analyses Run</p>
+        </div>
+    </div>
+</div>
+
+<!-- Audit Log -->
+<div class="aura-glass p-4">
+    <h4 class="text-white mb-4"><i class="bi bi-clock-history me-2"></i>Recent Admin Actions</h4>
+    
+    {% if recent_actions %}
+    <div class="table-responsive">
+        <table class="table table-dark table-hover table-borderless align-middle" style="background: transparent;">
+            <thead>
+                <tr class="text-secondary border-bottom border-secondary">
+                    <th>Time</th>
+                    <th>Admin</th>
+                    <th>Action</th>
+                    <th>Target User</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for action in recent_actions %}
+                <tr>
+                    <td class="text-secondary small">{{ action['created_at'].strftime('%Y-%m-%d %H:%M') if action['created_at'] else '' }}</td>
+                    <td>{{ action['admin_name'] }} <span class="text-secondary small d-block">{{ action['admin_email'] }}</span></td>
+                    <td><span class="badge bg-secondary">{{ action['action_type'] }}</span></td>
+                    <td>
+                        {% if action['target_name'] %}
+                        {{ action['target_name'] }} <span class="text-secondary small d-block">{{ action['target_email'] }}</span>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td class="text-secondary small">{{ action['details'] or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-secondary text-center my-4">No recent actions found.</p>
+    {% endif %}
+</div>
+{% endblock %}

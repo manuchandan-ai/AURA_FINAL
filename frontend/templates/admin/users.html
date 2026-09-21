@@ -1,0 +1,87 @@
+{% extends 'admin/layout.html' %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h2 class="aura-gradient-text d-inline-block mb-1">User Management</h2>
+        <p class="text-secondary mb-0">Approve, reject, or manage system access.</p>
+    </div>
+    
+    <!-- Filter -->
+    <div class="dropdown">
+        <button class="btn aura-btn-outline dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            Filter: {{ current_filter | title if current_filter else 'All Users' }}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark">
+            <li><a class="dropdown-item {% if not current_filter %}active{% endif %}" href="{{ url_for('admin.users') }}">All Users</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item {% if current_filter == 'pending' %}active{% endif %}" href="{{ url_for('admin.users', status='pending') }}">Pending</a></li>
+            <li><a class="dropdown-item {% if current_filter == 'approved' %}active{% endif %}" href="{{ url_for('admin.users', status='approved') }}">Approved</a></li>
+            <li><a class="dropdown-item {% if current_filter == 'banned' %}active{% endif %}" href="{{ url_for('admin.users', status='banned') }}">Banned</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="aura-glass p-0 overflow-hidden">
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table table-dark table-hover table-borderless align-middle mb-0" style="background: transparent;">
+            <thead class="bg-dark bg-opacity-50">
+                <tr class="text-secondary border-bottom border-secondary">
+                    <th class="ps-4">User</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr class="border-bottom border-secondary border-opacity-25">
+                    <td class="ps-4 py-3">
+                        <div class="fw-bold text-white">{{ u['name'] }}</div>
+                        <div class="text-secondary small">{{ u['email'] }}</div>
+                    </td>
+                    <td><span class="badge bg-secondary border border-light">{{ u['role'] | title }}</span></td>
+                    <td>
+                        {% set badge_color = 'success' if u['status'] == 'approved' else 'warning' if u['status'] == 'pending' else 'danger' %}
+                        <span class="badge bg-{{ badge_color }} border border-light">{{ u['status'] | title }}</span>
+                    </td>
+                    <td class="text-secondary small">{{ u['created_at'].strftime('%Y-%m-%d') if u['created_at'] else '' }}</td>
+                    <td class="text-end pe-4">
+                        {% if u['id'] != session['user_id'] %}
+                            <form action="{{ url_for('admin.change_user_status', user_id=u['id']) }}" method="POST" class="d-inline">
+                                {% if u['status'] == 'pending' %}
+                                    <button type="submit" name="status" value="approved" class="btn btn-sm btn-success me-1" title="Approve">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                    <button type="submit" name="status" value="rejected" class="btn btn-sm btn-danger" title="Reject">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                {% elif u['status'] == 'approved' %}
+                                    <button type="submit" name="status" value="banned" class="btn btn-sm btn-outline-danger" title="Ban">
+                                        <i class="bi bi-slash-circle"></i> Ban
+                                    </button>
+                                {% elif u['status'] == 'banned' or u['status'] == 'rejected' %}
+                                    <button type="submit" name="status" value="approved" class="btn btn-sm btn-outline-success" title="Restore">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                    </button>
+                                {% endif %}
+                            </form>
+                        {% else %}
+                            <span class="text-secondary fst-italic small">Current User</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="p-5 text-center">
+        <i class="bi bi-people text-secondary display-4 d-block mb-3"></i>
+        <p class="text-secondary mb-0">No users found matching current filters.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

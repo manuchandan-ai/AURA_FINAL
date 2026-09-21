@@ -52,7 +52,7 @@
                 <div class="d-flex gap-2 align-items-center nav-actions">
                     {% if session.get('user_id') %}
                         {% if session.get('user_role') == 'admin' %}
-                            <a href="#" class="btn aura-btn-ghost btn-sm">
+                            <a href="{{ url_for('admin.dashboard') }}" class="btn aura-btn-ghost btn-sm">
                                 <i class="bi bi-gear"></i> Admin
                             </a>
                         {% endif %}

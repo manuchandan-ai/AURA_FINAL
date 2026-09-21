@@ -16,20 +16,15 @@ class IntelligencePipeline:
         self._modules = {}
         
     def _get_mock_module_result(self, module_slug: str, text: str, filename: str, url: str) -> AnalysisResult:
-        """Temporary method returning mocked results until Stage 7+ builds real modules."""
+        """Execute the appropriate intelligence module."""
         
         if module_slug == 'trust':
-            return AnalysisResult(
-                module_name="AURA Trust",
-                confidence=92.5,
-                decision="High Risk of Phishing",
-                explanation="The input contains multiple urgency triggers and suspicious links commonly used in social engineering.",
-                signals=[
-                    {'name': 'Urgency Trigger', 'type': 'warning'},
-                    {'name': 'Suspicious URL', 'type': 'danger'}
-                ],
-                raw_data={'mock': True}
-            )
+            # Lazy load the module to save memory
+            if 'trust' not in self._modules:
+                from intelligence.modules.trust import AuraTrust
+                self._modules['trust'] = AuraTrust()
+            return self._modules['trust'].analyze(text=text, file_path=filename, url=url)
+            
         elif module_slug == 'verify':
             return AnalysisResult(
                 module_name="AURA Verify",

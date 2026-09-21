@@ -46,7 +46,7 @@ def route_input(text: str = None, filename: str = None, url: str = None) -> str:
     # 3. Text/Keyword Routing
     if cleaned_text:
         # Trust keywords
-        if any(keyword in cleaned_text for keyword in ['scam', 'phishing', 'fake', 'suspicious', 'hack', 'click here']):
+        if any(keyword in cleaned_text for keyword in ['scam', 'phishing', 'fake', 'suspicious', 'hack', 'click here', 'safe']):
             return 'trust'
             
         # Verify keywords

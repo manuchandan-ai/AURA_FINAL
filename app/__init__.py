@@ -30,6 +30,10 @@ def create_app(config_name=None):
     os.makedirs(app.config.get('UPLOAD_FOLDER', os.path.join(BASE_DIR, 'uploads')), exist_ok=True)
     os.makedirs(os.path.join(BASE_DIR, 'database'), exist_ok=True)
 
+    # Initialize database
+    from database.db import init_app as init_db_app
+    init_db_app(app)
+
     # Register blueprints
     _register_blueprints(app)
 

@@ -93,8 +93,45 @@ class IntelligencePipeline:
         
         try:
             # 4. Execute Module (Analyze, Predict, Decide Stages)
-            # In Stage 5, we use the mock result generator
             result = self._get_mock_module_result(target_slug, text, filename, url)
+            
+            # 4.5 Stage 13 Correlation & Memory
+            try:
+                from database.db import query_db
+                
+                input_string = f"{text or ''} {url or ''}".lower()
+                
+                # Check for previously flagged entities
+                bad_entities = query_db("SELECT entity_type, entity_value FROM global_entities WHERE risk_level = 'high'")
+                flagged = []
+                for row in bad_entities:
+                    if str(row['entity_value']).lower() in input_string:
+                        flagged.append(str(row['entity_value']))
+                
+                if flagged:
+                    result.signals.append({'name': 'Previously Flagged Entity Detected', 'type': 'danger'})
+                    result.explanation = f"WARNING: Correlation Engine identified known high-risk data ({', '.join(flagged)}). " + result.explanation
+                    if 'Risk' not in result.decision:
+                        result.decision = f"Elevated Risk: {result.decision}"
+                
+                # Save new high-risk entities
+                if result.confidence > 70 and any(w in result.decision.lower() for w in ['risk', 'fake', 'phishing', 'tampering']):
+                    # Add URL if present
+                    if url:
+                        execute_db(
+                            "INSERT OR IGNORE INTO global_entities (entity_type, entity_value, associated_module, risk_level) VALUES (?, ?, ?, ?)",
+                            ('url', url, result.module_name, 'high')
+                        )
+                    # Add extracted entities if present
+                    if 'entities' in result.raw_data:
+                        for etype, evalues in result.raw_data['entities'].items():
+                            for val in evalues:
+                                execute_db(
+                                    "INSERT OR IGNORE INTO global_entities (entity_type, entity_value, associated_module, risk_level) VALUES (?, ?, ?, ?)",
+                                    (etype, str(val), result.module_name, 'high')
+                                )
+            except Exception as ce:
+                logger.error(f"Correlation Engine Error: {ce}")
             
             # 5. Save Results to DB
             execute_db(

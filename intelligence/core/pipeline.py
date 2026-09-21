@@ -147,7 +147,28 @@ class IntelligencePipeline:
                 )
             )
             
-            # 6. Update History Record
+            # 6. Stage 14: Automated Decision Engine
+            try:
+                high_risk = any(w in result.decision.lower() for w in ['risk', 'fake', 'phishing', 'tampering', 'danger'])
+                if high_risk and result.confidence > 70.0:
+                    # Auto-generate a system report
+                    execute_db(
+                        '''INSERT INTO reports (user_id, analysis_id, report_type, title, content, status) 
+                           VALUES (?, ?, ?, ?, ?, ?)''',
+                        (
+                            user_id,
+                            history_id,
+                            'suspicious',
+                            f"Auto-Flagged: {result.decision}",
+                            f"System automatically flagged this analysis due to high risk content.\nModule: {result.module_name}\nInput: {input_summary}",
+                            'pending'
+                        )
+                    )
+                    logger.info(f"Automated Decision Engine generated report for analysis {history_id}")
+            except Exception as ade:
+                logger.error(f"Automated Decision Engine Error: {ade}")
+            
+            # 7. Update History Record
             execute_db(
                 'UPDATE analysis_history SET status = ?, intent = ?, confidence = ? WHERE id = ?',
                 ('completed', 'general_query', result.confidence / 100.0, history_id)

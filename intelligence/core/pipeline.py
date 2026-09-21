@@ -32,17 +32,11 @@ class IntelligencePipeline:
             return self._modules['verify'].analyze(text=text, file_path=filename, url=url)
             
         elif module_slug == 'find':
-            return AnalysisResult(
-                module_name="AURA Find",
-                confidence=60.0,
-                decision="Potential Matches Found (3)",
-                explanation="Found 3 similar items in the regional database reported in the last 7 days.",
-                signals=[
-                    {'name': 'Color Match', 'type': 'info'},
-                    {'name': 'Location Proximity', 'type': 'info'}
-                ],
-                raw_data={'mock': True}
-            )
+            if 'find' not in self._modules:
+                from intelligence.modules.find import AuraFind
+                self._modules['find'] = AuraFind()
+            return self._modules['find'].analyze(text=text, file_path=filename, url=url)
+            
         else:
             return AnalysisResult(
                 module_name=f"AURA {module_slug.capitalize()}",

@@ -53,11 +53,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data.status === 'success' && data.history.length > 0) {
             tbody.innerHTML = data.history.map(item => {
                 let badgeClass = 'secondary';
-                if (item.decision.toLowerCase().includes('high risk') || item.decision.toLowerCase().includes('fake')) {
+                let decisionText = item.decision || 'Failed/Unknown';
+                if (decisionText.toLowerCase().includes('high risk') || decisionText.toLowerCase().includes('fake')) {
                     badgeClass = 'danger';
-                } else if (item.decision.toLowerCase().includes('authentic') || item.decision.toLowerCase().includes('safe')) {
+                } else if (decisionText.toLowerCase().includes('authentic') || decisionText.toLowerCase().includes('safe')) {
                     badgeClass = 'success';
-                } else if (item.decision.toLowerCase().includes('warning') || item.decision.toLowerCase().includes('potential')) {
+                } else if (decisionText.toLowerCase().includes('warning') || decisionText.toLowerCase().includes('potential')) {
                     badgeClass = 'warning';
                 }
                 
@@ -83,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                         </td>
                         <td class="pe-4 text-end">
-                            <span class="badge bg-${badgeClass} bg-opacity-25 text-${badgeClass} border border-${badgeClass}">${item.decision}</span>
+                            <span class="badge bg-${badgeClass} bg-opacity-25 text-${badgeClass} border border-${badgeClass}">${decisionText}</span>
                         </td>
                     </tr>
                 `;

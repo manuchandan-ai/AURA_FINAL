@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AURA — Adaptive Unified Reasoning Assistant{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- AURA Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/aura.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="aura-body">
+    <!-- Background Canvas -->
+    <canvas id="aura-particles" class="aura-particles-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg aura-navbar fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <span class="aura-gradient-text fw-bold fs-4">AURA</span>
+                <span class="aura-status-dot ms-2"></span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#auraNav">
+                <i class="bi bi-list text-light fs-2"></i>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="auraNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Modules</a>
+                        <ul class="dropdown-menu aura-glass-dropdown">
+                            <li><a class="dropdown-item" href="#">Trust</a></li>
+                            <li><a class="dropdown-item" href="#">Verify</a></li>
+                            <li><a class="dropdown-item" href="#">Find</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+                </ul>
+                
+                <div class="d-flex gap-2 nav-actions">
+                    <a href="#" class="btn aura-btn-outline">Login</a>
+                    <a href="#" class="btn aura-btn-primary">Register</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="aura-flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert aura-flash alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="aura-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="aura-footer py-4 mt-auto">
+        <div class="container text-center text-md-start">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <span class="aura-gradient-text fw-bold me-2">AURA</span>
+                    <span class="text-secondary small">v0.1.0 Stage 0</span>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span class="text-secondary small">&copy; 2024 AURA Intelligence Platform. All rights reserved.</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- AURA Custom JS -->
+    <script src="{{ url_for('static', filename='js/aura.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

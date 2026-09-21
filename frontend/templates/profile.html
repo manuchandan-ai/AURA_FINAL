@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Profile — AURA{% endblock %}
+{% block content %}
+<section class="aura-section pt-5 mt-5">
+    <div class="container" style="max-width: 800px;">
+        <div class="text-center mb-5">
+            <div class="d-inline-flex justify-content-center align-items-center rounded-circle bg-primary bg-gradient mb-3" style="width: 100px; height: 100px;">
+                <i class="bi bi-person-fill fs-1 text-white"></i>
+            </div>
+            <h3 class="mb-1">{{ user['name'] }}</h3>
+            <p class="text-secondary mb-2">{{ user['email'] }}</p>
+            <div class="d-flex justify-content-center gap-2">
+                {% if user['status'] == 'approved' %}
+                    <span class="badge bg-success">Approved</span>
+                {% elif user['status'] == 'pending' %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                {% elif user['status'] == 'waitlisted' %}
+                    <span class="badge bg-info text-dark">Waitlisted</span>
+                {% else %}
+                    <span class="badge bg-danger">{{ user['status'] | title }}</span>
+                {% endif %}
+                <span class="badge bg-secondary border border-light">{{ user['role'] | title }}</span>
+            </div>
+        </div>
+
+        <div class="aura-glass card">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" action="{{ url_for('auth.profile') }}">
+                    
+                    <h5 class="mb-4 text-white">Personal Information</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label text-secondary">Full Name</label>
+                            <input type="text" class="form-control aura-glass-input" id="name" name="name" value="{{ user['name'] }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-secondary">Email Address</label>
+                            <div class="form-control aura-glass-input text-secondary" style="background-color: rgba(255,255,255,0.02); cursor: not-allowed;">{{ user['email'] }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label text-secondary">Phone Number</label>
+                            <input type="tel" class="form-control aura-glass-input" id="phone" name="phone" value="{{ user['phone'] or '' }}">
+                        </div>
+                    </div>
+
+                    <h5 class="mb-4 text-white">Address</h5>
+                    <div class="mb-3">
+                        <label for="address" class="form-label text-secondary">Address</label>
+                        <textarea class="form-control aura-glass-input" id="address" name="address" rows="2">{{ profile['address'] or '' if profile else '' }}</textarea>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label for="city" class="form-label text-secondary">City</label>
+                            <input type="text" class="form-control aura-glass-input" id="city" name="city" value="{{ profile['city'] or '' if profile else '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="state" class="form-label text-secondary">State</label>
+                            <input type="text" class="form-control aura-glass-input" id="state" name="state" value="{{ profile['state'] or '' if profile else '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="pincode" class="form-label text-secondary">Pincode</label>
+                            <input type="text" class="form-control aura-glass-input" id="pincode" name="pincode" value="{{ profile['pincode'] or '' if profile else '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="country" class="form-label text-secondary">Country</label>
+                            <input type="text" class="form-control aura-glass-input" id="country" name="country" value="{{ profile['country'] or '' if profile else '' }}">
+                        </div>
+                    </div>
+
+                    <h5 class="mb-4 text-white">About</h5>
+                    <div class="mb-4">
+                        <label for="bio" class="form-label text-secondary">Bio</label>
+                        <textarea class="form-control aura-glass-input" id="bio" name="bio" rows="3">{{ profile['bio'] or '' if profile else '' }}</textarea>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn aura-btn-primary px-5">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

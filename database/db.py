@@ -81,6 +81,32 @@ def init_db():
     db.commit()
     logger.info("Database initialized successfully from %s", SCHEMA_PATH)
 
+    # Seed default admin account if it doesn't exist
+    _seed_admin(db)
+
+
+def _seed_admin(db):
+    """Create the default admin account if it doesn't exist."""
+    from werkzeug.security import generate_password_hash
+
+    existing = db.execute(
+        'SELECT id FROM users WHERE email = ?', ('admin@aura.local',)
+    ).fetchone()
+
+    if existing is None:
+        password_hash = generate_password_hash('AuraAdmin@2024', method='pbkdf2:sha256', salt_length=16)
+        cursor = db.execute(
+            'INSERT INTO users (email, password_hash, name, phone, status, role) VALUES (?, ?, ?, ?, ?, ?)',
+            ('admin@aura.local', password_hash, 'AURA Administrator', None, 'approved', 'admin')
+        )
+        admin_id = cursor.lastrowid
+        db.execute(
+            'INSERT INTO user_profiles (user_id, country) VALUES (?, ?)',
+            (admin_id, 'India')
+        )
+        db.commit()
+        logger.info("Default admin account created: admin@aura.local")
+
 
 def query_db(query, args=(), one=False):
     """Execute a SELECT query and return results.

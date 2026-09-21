@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Login — AURA{% endblock %}
+{% block content %}
+<section class="aura-section d-flex align-items-center justify-content-center" style="min-height: calc(100vh - 80px); padding-top: 80px;">
+    <div class="aura-glass card w-100" style="max-width: 450px;">
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+                <h4 class="aura-gradient-text mb-2">Welcome Back</h4>
+                <p class="text-secondary">Sign in to your account</p>
+            </div>
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                <div class="mb-3">
+                    <label for="email" class="form-label text-secondary">Email address</label>
+                    <input type="email" class="form-control aura-glass-input" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label text-secondary">Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control aura-glass-input" id="password" name="password" required>
+                        <button class="btn btn-outline-secondary" type="button" onclick="const p = document.getElementById('password'); p.type = p.type === 'password' ? 'text' : 'password';"><i class="bi bi-eye"></i></button>
+                    </div>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me">
+                    <label class="form-check-label text-secondary" for="rememberMe">Remember me</label>
+                </div>
+                <button type="submit" class="btn aura-btn-primary w-100 mt-2">Sign In</button>
+            </form>
+            <div class="text-center mt-4">
+                <span class="text-secondary">Don't have an account? </span>
+                <a href="{{ url_for('auth.register') }}" class="text-decoration-none text-info">Register</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

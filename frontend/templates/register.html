@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Register — AURA{% endblock %}
+{% block content %}
+<section class="aura-section d-flex align-items-center justify-content-center py-5" style="min-height: calc(100vh - 80px); padding-top: 80px;">
+    <div class="aura-glass card w-100" style="max-width: 600px;">
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+                <h4 class="aura-gradient-text mb-2">Create Your Account</h4>
+                <p class="text-secondary">Join the AURA Intelligence Platform</p>
+            </div>
+            <form method="POST" action="{{ url_for('auth.register') }}">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label text-secondary">Full Name</label>
+                        <input type="text" class="form-control aura-glass-input" id="name" name="name" required value="{{ form_data.get('name', '') if form_data else '' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label text-secondary">Email Address</label>
+                        <input type="email" class="form-control aura-glass-input" id="email" name="email" required value="{{ form_data.get('email', '') if form_data else '' }}">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="phone" class="form-label text-secondary">Phone Number</label>
+                    <input type="tel" class="form-control aura-glass-input" id="phone" name="phone" value="{{ form_data.get('phone', '') if form_data else '' }}">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="password" class="form-label text-secondary">Password <small class="text-muted">(Min 8 characters)</small></label>
+                        <input type="password" class="form-control aura-glass-input" id="password" name="password" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="confirm_password" class="form-label text-secondary">Confirm Password</label>
+                        <input type="password" class="form-control aura-glass-input" id="confirm_password" name="confirm_password" required>
+                    </div>
+                </div>
+
+                <hr class="my-4 border-secondary">
+                <h6 class="text-secondary mb-3">Address Information (Optional)</h6>
+
+                <div class="mb-3">
+                    <label for="address" class="form-label text-secondary">Address</label>
+                    <textarea class="form-control aura-glass-input" id="address" name="address" rows="2">{{ form_data.get('address', '') if form_data else '' }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="city" class="form-label text-secondary">City</label>
+                        <input type="text" class="form-control aura-glass-input" id="city" name="city" value="{{ form_data.get('city', '') if form_data else '' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="state" class="form-label text-secondary">State</label>
+                        <input type="text" class="form-control aura-glass-input" id="state" name="state" value="{{ form_data.get('state', '') if form_data else '' }}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label for="pincode" class="form-label text-secondary">Pincode</label>
+                        <input type="text" class="form-control aura-glass-input" id="pincode" name="pincode" value="{{ form_data.get('pincode', '') if form_data else '' }}">
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label for="country" class="form-label text-secondary">Country</label>
+                        <input type="text" class="form-control aura-glass-input" id="country" name="country" value="{{ form_data.get('country', 'India') if form_data else 'India' }}">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn aura-btn-primary w-100">Create Account</button>
+            </form>
+            <div class="text-center mt-4">
+                <span class="text-secondary">Already have an account? </span>
+                <a href="{{ url_for('auth.login') }}" class="text-decoration-none text-info">Login</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

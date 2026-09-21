@@ -46,12 +46,24 @@
                             <li><a class="dropdown-item" href="#">Find</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.about') }}">About</a></li>
                 </ul>
                 
-                <div class="d-flex gap-2 nav-actions">
-                    <a href="#" class="btn aura-btn-outline">Login</a>
-                    <a href="#" class="btn aura-btn-primary">Register</a>
+                <div class="d-flex gap-2 align-items-center nav-actions">
+                    {% if session.get('user_id') %}
+                        {% if session.get('user_role') == 'admin' %}
+                            <a href="#" class="btn aura-btn-ghost btn-sm">
+                                <i class="bi bi-gear"></i> Admin
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.profile') }}" class="btn aura-btn-ghost btn-sm">
+                            <i class="bi bi-person-circle"></i> {{ session.get('user_name', 'Profile') }}
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="btn aura-btn-outline btn-sm">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn aura-btn-outline btn-sm">Login</a>
+                        <a href="{{ url_for('auth.register') }}" class="btn aura-btn-primary btn-sm">Register</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

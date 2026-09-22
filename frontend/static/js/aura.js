@@ -201,15 +201,34 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             resultsArea.classList.remove('d-none');
-            resultsArea.innerHTML = `
-                <div class="d-flex align-items-center justify-content-center p-5">
-                    <div class="spinner-border text-info me-3" role="status" style="width: 3rem; height: 3rem;"></div>
-                    <div class="text-start">
-                        <h4 class="text-info mb-1">Intelligence Core Active</h4>
-                        <div class="text-secondary small">Routing to optimal module...</div>
-                    </div>
+            
+            let userContent = textContent;
+            if (hasFile) userContent += `<br><span class="text-info small"><i class="bi bi-paperclip"></i> ${fileUpload.files[0].name}</span>`;
+            if (urlContent) userContent += `<br><span class="text-info small"><i class="bi bi-link-45deg"></i> ${urlContent}</span>`;
+            
+            const userBubble = `
+                <div class="aura-chat-bubble user">
+                    ${userContent.replace(/\n/g, '<br>')}
                 </div>
             `;
+            
+            const loadingId = 'loading-' + Date.now();
+            const loadingBubble = `
+                <div id="${loadingId}" class="aura-chat-bubble aura d-flex align-items-center gap-3">
+                    <div class="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                    <span class="text-secondary">AURA is analyzing context...</span>
+                </div>
+            `;
+            
+            if (resultsArea.innerHTML.trim() === '<!-- Content injected via JS as chat bubbles -->') {
+                resultsArea.innerHTML = userBubble + loadingBubble;
+            } else {
+                resultsArea.innerHTML += userBubble + loadingBubble;
+            }
+            
+            // clear input
+            if(textInput) { textInput.value = ''; charCount.textContent = '0'; }
+            if(urlContent) { document.getElementById('url-input').value = ''; }
             
             analyzeBtn.disabled = true;
             
@@ -228,49 +247,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    // Calculate degree for score ring (e.g. 92% = 331deg)
-                    const deg = (data.confidence / 100) * 360;
-                    
                     let signalsHtml = '';
                     if (data.signals && data.signals.length > 0) {
                         signalsHtml = data.signals.map(s => 
-                            `<span class="aura-signal-badge ${s.type}"><i class="bi bi-tag-fill"></i> ${s.name}</span>`
+                            `<span class="badge bg-dark border border-secondary text-light fw-normal"><i class="bi bi-tag text-info"></i> ${s.name}</span>`
                         ).join('');
                     }
                     
-                    resultsArea.innerHTML = `
-                        <div class="aura-result-card aura-fade-in visible">
-                            <div class="d-flex justify-content-between align-items-start mb-4">
-                                <div>
-                                    <h6 class="text-secondary text-uppercase tracking-wide mb-1">Detected Module</h6>
-                                    <h4 class="text-white mb-0"><i class="bi bi-cpu text-primary me-2"></i>${data.module}</h4>
+                    let decisionBadgeClass = 'info';
+                    if (data.decision.toLowerCase().includes('high risk') || data.decision.toLowerCase().includes('fake')) decisionBadgeClass = 'danger';
+                    if (data.decision.toLowerCase().includes('safe') || data.decision.toLowerCase().includes('authentic')) decisionBadgeClass = 'success';
+                    
+                    const responseBubble = `
+                        <div class="aura-chat-bubble aura">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25 gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-secondary bg-opacity-25 border border-secondary text-light"><i class="bi bi-cpu text-primary me-1"></i> ${data.module.toUpperCase()}</span>
+                                    <span class="badge bg-${decisionBadgeClass} bg-opacity-25 border border-${decisionBadgeClass} text-${decisionBadgeClass}">${data.decision}</span>
                                 </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="text-end">
-                                        <div class="text-white fw-bold fs-5">${data.decision}</div>
-                                        <div class="text-secondary small">Confidence</div>
-                                    </div>
-                                    <div class="aura-score-ring" style="--score-deg: ${deg}deg">
-                                        <span>${data.confidence}%</span>
-                                    </div>
-                                </div>
+                                <div class="text-secondary small">Confidence: <strong class="text-white">${data.confidence}%</strong></div>
                             </div>
                             
-                            ${signalsHtml ? `<div class="mb-4 d-flex flex-wrap gap-2">${signalsHtml}</div>` : ''}
-                            
-                            <div class="aura-explanation-box">
-                                <strong>Explanation:</strong> ${data.explanation}
+                            <div class="text-white fs-6 mb-3" style="line-height: 1.6; font-weight: 300;">
+                                ${data.explanation.replace(/\n/g, '<br>')}
                             </div>
+                            
+                            ${signalsHtml ? `<div class="d-flex flex-wrap gap-2 mt-2">${signalsHtml}</div>` : ''}
                         </div>
                     `;
+                    document.getElementById(loadingId).outerHTML = responseBubble;
                 } else {
-                    resultsArea.innerHTML = `<div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger">${data.message || 'Analysis failed.'}</div>`;
+                    document.getElementById(loadingId).outerHTML = `<div class="aura-chat-bubble aura text-danger border-danger">${data.message || 'Analysis failed.'}</div>`;
                 }
             } catch (error) {
                 console.error('Analysis error:', error);
-                resultsArea.innerHTML = `<div class="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger">Network error connecting to AURA Core.</div>`;
+                document.getElementById(loadingId).outerHTML = `<div class="aura-chat-bubble aura text-danger border-danger">Network error connecting to AURA Core.</div>`;
             } finally {
                 analyzeBtn.disabled = false;
+                // clear file
+                if(fileUpload) { fileUpload.value = ''; document.getElementById('file-info').classList.add('d-none'); }
             }
         });
     }

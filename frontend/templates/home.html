@@ -34,44 +34,47 @@
                         <span class="aura-status-dot ms-3" title="System Ready"></span>
                     </div>
                     
-                    <div class="mb-3 position-relative">
-                        <textarea class="form-control aura-glass-input aura-console-textarea" 
-                                  placeholder="Describe your problem, paste suspicious text, or ask AURA..." 
-                                  rows="4" id="aura-input"></textarea>
-                        <div class="text-end mt-1 text-secondary small"><span id="char-count">0</span> / 2000</div>
-                    </div>
-                    
-                    <div class="aura-console-actions d-flex flex-wrap gap-2 mb-4 align-items-center">
-                        <label class="btn aura-btn-ghost rounded-circle p-2" title="Upload File">
-                            <i class="bi bi-paperclip fs-5"></i>
-                            <input type="file" id="file-upload" class="d-none" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
-                        </label>
-                        <button class="btn aura-btn-ghost rounded-circle p-2" id="toggle-url" title="Add URL">
-                            <i class="bi bi-link-45deg fs-5"></i>
-                        </button>
-                        <button class="btn aura-btn-ghost rounded-circle p-2" disabled title="Voice Input (Coming soon)">
-                            <i class="bi bi-mic fs-5"></i>
-                        </button>
-                        <div id="url-container" class="ms-2 d-none flex-grow-1">
-                            <input type="url" class="form-control aura-glass-input form-control-sm" placeholder="https://...">
+                    <!-- Chat-Style Input Box -->
+                    <div class="aura-chat-input-wrapper mb-4">
+                        <textarea class="form-control aura-chat-input" 
+                                  placeholder="Ask AURA anything..." 
+                                  rows="2" id="aura-input" style="resize: none;"></textarea>
+                        
+                        <div id="file-info" class="aura-file-info d-none mx-3 mb-2 p-2 rounded small text-secondary d-flex align-items-center" style="background: rgba(255,255,255,0.1);">
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            <span id="file-name" class="flex-grow-1 text-truncate"></span>
+                            <button class="btn-close btn-close-white ms-2" style="font-size: 0.5rem;" id="clear-file"></button>
+                        </div>
+                        
+                        <div id="url-container" class="mx-3 mb-2 d-none">
+                            <input type="url" id="url-input" class="form-control aura-glass-input form-control-sm" placeholder="https://...">
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center px-3 pb-2 pt-1">
+                            <div class="d-flex gap-2">
+                                <label class="btn btn-sm text-secondary hover-white p-1 m-0" title="Upload File" style="cursor:pointer;">
+                                    <i class="bi bi-paperclip fs-5"></i>
+                                    <input type="file" id="file-upload" class="d-none" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+                                </label>
+                                <button class="btn btn-sm text-secondary hover-white p-1 m-0" id="toggle-url" title="Add URL">
+                                    <i class="bi bi-link-45deg fs-5"></i>
+                                </button>
+                                <button class="btn btn-sm text-secondary p-1 m-0" disabled title="Voice Input (Coming soon)">
+                                    <i class="bi bi-mic fs-5"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="text-secondary small d-none d-sm-inline"><span id="char-count">0</span> / 2000</span>
+                                <button id="analyze-btn" class="btn aura-btn-primary rounded-pill px-4">
+                                    BEGIN <i class="bi bi-arrow-right ms-1"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div id="file-info" class="aura-file-info d-none mb-3 p-2 rounded small text-secondary d-flex align-items-center">
-                        <i class="bi bi-file-earmark-text me-2"></i>
-                        <span id="file-name" class="flex-grow-1 text-truncate"></span>
-                        <button class="btn-close btn-close-white ms-2" style="font-size: 0.5rem;" id="clear-file"></button>
-                    </div>
-                    
-                    <div class="text-center mt-4">
-                        <button id="analyze-btn" class="btn aura-btn-primary aura-analyze-btn rounded-pill fs-5 py-2 shadow-lg">
-                            <i class="bi bi-cpu me-2"></i> Start
-                        </button>
-                    </div>
 
-                    <!-- Results Area -->
-                    <div id="analysis-results" class="mt-4 p-4 rounded d-none" style="background: rgba(0,0,0,0.3); border: 1px solid var(--aura-glass-border);">
-                        <!-- Content injected via JS -->
+                    <!-- Conversational Results Area -->
+                    <div id="analysis-results" class="d-none d-flex flex-column gap-3 mt-4">
+                        <!-- Content injected via JS as chat bubbles -->
                     </div>
                 </div>
             </div>

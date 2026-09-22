@@ -349,24 +349,64 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* =========================================
-   Analysis Console
+   Analysis Console & Chat Input
    ========================================= */
 .aura-console {
     position: relative;
     z-index: 2;
 }
 
-.aura-console-textarea {
-    min-height: 120px;
-    resize: vertical;
-    font-size: 1.1rem;
-    padding: 1rem;
+.aura-chat-input-wrapper {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--aura-glass-border);
+    border-radius: var(--aura-radius-xl);
+    overflow: hidden;
+    transition: var(--aura-transition-base);
+}
+.aura-chat-input-wrapper:focus-within {
+    border-color: var(--aura-accent-purple);
+    box-shadow: 0 0 15px rgba(123, 47, 247, 0.2);
+    background: rgba(0, 0, 0, 0.5);
 }
 
-.aura-analyze-btn {
-    min-width: 200px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+.aura-chat-input {
+    background: transparent !important;
+    border: none !important;
+    color: var(--aura-text-primary) !important;
+    font-size: 1.05rem;
+    padding: 1.25rem 1.25rem 0.5rem 1.25rem;
+    box-shadow: none !important;
+}
+.aura-chat-input::placeholder {
+    color: rgba(255,255,255,0.3);
+}
+
+.hover-white:hover {
+    color: #fff !important;
+}
+
+/* Chat Bubbles */
+.aura-chat-bubble {
+    max-width: 85%;
+    padding: 1rem 1.25rem;
+    border-radius: 1.25rem;
+    animation: fadeIn 0.3s ease-out;
+}
+.aura-chat-bubble.user {
+    align-self: flex-end;
+    background: rgba(255,255,255,0.1);
+    border-bottom-right-radius: 4px;
+}
+.aura-chat-bubble.aura {
+    align-self: flex-start;
+    background: rgba(123, 47, 247, 0.15);
+    border: 1px solid rgba(123, 47, 247, 0.3);
+    border-bottom-left-radius: 4px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .aura-file-info {

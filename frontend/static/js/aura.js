@@ -207,16 +207,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (urlContent) userContent += `<br><span class="text-info small"><i class="bi bi-link-45deg"></i> ${urlContent}</span>`;
             
             const userBubble = `
-                <div class="aura-chat-bubble user">
-                    ${userContent.replace(/\n/g, '<br>')}
+                <div class="d-flex justify-content-end w-100 mb-3">
+                    <div class="aura-chat-bubble user">
+                        ${userContent.replace(/\n/g, '<br>')}
+                    </div>
                 </div>
             `;
             
             const loadingId = 'loading-' + Date.now();
             const loadingBubble = `
-                <div id="${loadingId}" class="aura-chat-bubble aura d-flex align-items-center gap-3">
-                    <div class="spinner-grow spinner-grow-sm text-info" role="status"></div>
-                    <span class="text-secondary">AURA is analyzing context...</span>
+                <div id="${loadingId}" class="d-flex align-items-start gap-3 w-100 mb-3">
+                    <div class="flex-shrink-0 mt-1">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center shadow-lg" style="width: 40px; height: 40px; background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%); opacity: 0.7;">
+                            <i class="bi bi-cpu text-white fs-5"></i>
+                        </div>
+                    </div>
+                    <div class="aura-chat-bubble aura d-flex align-items-center gap-3">
+                        <div class="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                        <span class="text-secondary">AURA is analyzing context...</span>
+                    </div>
                 </div>
             `;
             
@@ -250,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     let signalsHtml = '';
                     if (data.signals && data.signals.length > 0) {
                         signalsHtml = data.signals.map(s => 
-                            `<span class="badge bg-dark border border-secondary text-light fw-normal"><i class="bi bi-tag text-info"></i> ${s.name}</span>`
+                            `<span class="badge bg-dark bg-opacity-50 border border-secondary border-opacity-50 text-light fw-normal px-2 py-1"><i class="bi bi-tag text-info me-1"></i> ${s.name}</span>`
                         ).join('');
                     }
                     
@@ -259,26 +268,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.decision.toLowerCase().includes('safe') || data.decision.toLowerCase().includes('authentic')) decisionBadgeClass = 'success';
                     
                     const responseBubble = `
-                        <div class="aura-chat-bubble aura">
-                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25 gap-2">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-secondary bg-opacity-25 border border-secondary text-light"><i class="bi bi-cpu text-primary me-1"></i> ${data.module.toUpperCase()}</span>
-                                    <span class="badge bg-${decisionBadgeClass} bg-opacity-25 border border-${decisionBadgeClass} text-${decisionBadgeClass}">${data.decision}</span>
+                        <div class="d-flex align-items-start gap-3 w-100 mb-3">
+                            <div class="flex-shrink-0 mt-1">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center shadow-lg" style="width: 40px; height: 40px; background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%); box-shadow: 0 0 15px rgba(123,47,247,0.4) !important;">
+                                    <i class="bi bi-cpu-fill text-white fs-5"></i>
                                 </div>
-                                <div class="text-secondary small">Confidence: <strong class="text-white">${data.confidence}%</strong></div>
                             </div>
-                            
-                            <div class="text-white fs-6 mb-3" style="line-height: 1.6; font-weight: 300;">
-                                ${data.explanation.replace(/\n/g, '<br>')}
+                            <div class="aura-chat-bubble aura flex-grow-1">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom border-light border-opacity-10 gap-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-white bg-opacity-10 border border-light border-opacity-25 text-light px-2 py-1"><i class="bi bi-cpu text-info me-1"></i> ${data.module.toUpperCase()}</span>
+                                        <span class="badge bg-${decisionBadgeClass} bg-opacity-25 border border-${decisionBadgeClass} text-${decisionBadgeClass} px-2 py-1">${data.decision}</span>
+                                    </div>
+                                    <div class="text-secondary small">Confidence: <strong class="text-white">${data.confidence}%</strong></div>
+                                </div>
+                                
+                                <div class="text-white fs-6 mb-3" style="line-height: 1.7; font-weight: 300;">
+                                    ${data.explanation.replace(/\n/g, '<br>')}
+                                </div>
+                                
+                                ${signalsHtml ? `<div class="d-flex flex-wrap gap-2 mt-3 pt-3 border-top border-light border-opacity-10">${signalsHtml}</div>` : ''}
                             </div>
-                            
-                            ${signalsHtml ? `<div class="d-flex flex-wrap gap-2 mt-2">${signalsHtml}</div>` : ''}
                         </div>
                     `;
                     document.getElementById(loadingId).outerHTML = responseBubble;
                 } else {
                     document.getElementById(loadingId).outerHTML = `<div class="aura-chat-bubble aura text-danger border-danger">${data.message || 'Analysis failed.'}</div>`;
                 }
+                
+                // Scroll to bottom of results
+                resultsArea.scrollTop = resultsArea.scrollHeight;
             } catch (error) {
                 console.error('Analysis error:', error);
                 document.getElementById(loadingId).outerHTML = `<div class="aura-chat-bubble aura text-danger border-danger">Network error connecting to AURA Core.</div>`;

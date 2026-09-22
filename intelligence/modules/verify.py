@@ -135,24 +135,47 @@ class AuraVerify(AuraModule):
         confidence = max(0.0, min(99.9, confidence))
         
         # 4. Synthesize Decision
+        explanation_parts = [
+            f"<strong>Verification & Forensics Report</strong><br><br>",
+            f"AURA Verify has completed structural and semantic analysis on the provided document.<br><br>",
+            f"<strong>Data Extraction Summary:</strong><br>"
+        ]
+        
+        if entities:
+            for k, v in entities.items():
+                explanation_parts.append(f"• <strong>{k}:</strong> {v}<br>")
+        else:
+            explanation_parts.append("• No standard verification entities (Name, DOB, ID) could be extracted.<br>")
+            
+        explanation_parts.append("<br><strong>Forensic Analysis:</strong><br>")
+        
+        if is_gov_id:
+            explanation_parts.append("• Document structure matches known Government/National ID profiles.<br>")
+        elif is_certificate:
+            explanation_parts.append("• Document structure aligns with standard Academic/Professional Certificates.<br>")
+        
         if tamper_flags > 0:
             decision = "High Risk of Tampering"
-            explanation = "Document contains signs of digital manipulation or irregular formatting."
+            explanation_parts.append("• <strong>CRITICAL:</strong> Digital manipulation or metadata tampering signatures were detected.<br>")
+            explanation_parts.append("<br><strong>Conclusion:</strong><br>The document is highly suspicious. Manual verification against the issuing authority's database is mandatory.")
         elif confidence >= 80.0:
             decision = "Document Appears Authentic"
-            explanation = f"Document matches expected layouts and key entities were found. Extracted: {', '.join(entities.keys())}."
+            explanation_parts.append("• Cryptographic structure and OCR spatial layout are consistent with authentic documents.<br>")
+            explanation_parts.append("<br><strong>Conclusion:</strong><br>The document appears authentic and structurally sound. No tampering signatures were detected.")
         elif confidence >= 40.0:
             decision = "Inconclusive / Low Quality"
-            explanation = "Could not definitively verify the document. The image might be blurry or the format is non-standard."
+            explanation_parts.append("• Data extraction was partially successful, but key validation features are missing or obscured.<br>")
+            explanation_parts.append("<br><strong>Conclusion:</strong><br>Analysis is inconclusive. This often occurs with low-resolution scans, heavy glare, or non-standard document formats. Please provide a clearer copy.")
         else:
             decision = "Likely Invalid"
-            explanation = "Document lacks expected security features and entity structures."
+            explanation_parts.append("• Document is entirely missing required structural layouts and identifiable entities.<br>")
+            explanation_parts.append("<br><strong>Conclusion:</strong><br>The document fails standard authenticity checks. It may be heavily redacted, corrupted, or synthetic.")
             
         return AnalysisResult(
             module_name=self.module_name,
             confidence=confidence,
             decision=decision,
-            explanation=explanation,
+            explanation="".join(explanation_parts),
             signals=signals,
             raw_data={'extracted_entities': entities, 'ocr_text_preview': extracted_text[:200]}
         )

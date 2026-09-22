@@ -94,17 +94,33 @@ class AuraHeritage(AuraModule):
             risk_type = 'danger' if civ_data['risk'] == 'High' else ('warning' if civ_data['risk'] == 'Medium' else 'primary')
             signals.append({'name': f"Artifact Trafficking Risk: {civ_data['risk']}", 'type': risk_type})
             
-            explanation = (
-                f"Based on the characteristics described, this aligns with {civ_data['era']}. "
-                f"{civ_data['context']} "
-                f"Historical artifacts from this region have a {civ_data['risk'].lower()} risk of illegal antiquities trafficking."
-            )
+            explanation_parts = [
+                f"<strong>Historical Analysis Report</strong><br><br>",
+                f"AURA Heritage has matched the described artifact or query to the <strong>{civ_data['era']}</strong>.<br><br>",
+                f"<strong>Historical Context:</strong><br>",
+                f"• {civ_data['context']}<br>"
+            ]
+            
+            if years_found:
+                explanation_parts.append(f"• <strong>Chronology:</strong> The specified dates ({', '.join(years_found)}) overlap with this civilization's timeline.<br>")
+                
+            explanation_parts.append(f"<br><strong>Preservation & Trafficking Risk: {civ_data['risk']}</strong><br>")
+            explanation_parts.append(f"Artifacts and monuments from this era currently face a {civ_data['risk'].lower()} risk profile regarding illegal antiquities trafficking, looting, or forgery. Authentication by a certified archaeologist is highly recommended.")
+            
+            explanation = "".join(explanation_parts)
             raw_data = civ_data
         else:
             confidence = 45.0
             decision = "Unknown Origin"
             signals.append({'name': 'No Civilization Match', 'type': 'warning'})
-            explanation = "We could not definitively match the artifact to a known major civilization in our database. It may require specialized radiocarbon dating or expert appraisal."
+            
+            explanation = (
+                f"<strong>Historical Analysis Report</strong><br><br>"
+                f"AURA Heritage could not definitively match the artifact's characteristics to a primary civilization in our current architectural database.<br><br>"
+                f"<strong>Recommended Actions:</strong><br>"
+                f"• Provide more specific structural keywords (e.g., 'columns', 'hieroglyphs', 'bronze').<br>"
+                f"• The artifact may belong to a more obscure era, or require specialized radiocarbon (C-14) dating and expert appraisal."
+            )
             raw_data = {}
             
         return AnalysisResult(

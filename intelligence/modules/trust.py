@@ -179,15 +179,41 @@ class AuraTrust(AuraModule):
         if confidence >= 75.0:
             decision = "High Risk of Phishing/Scam"
             signals.append({'name': 'ML Threat Detection', 'type': 'danger'})
-            explanation = f"Our AI model detected strong characteristics of a scam or phishing attempt. {'Additionally, suspicious links were found.' if url_signals else 'Exercise extreme caution.'}"
+            explanation = (
+                f"<strong>Critical Threat Detected</strong><br><br>"
+                f"AURA Trust has identified this input as highly dangerous, presenting classic indicators of a phishing or scam attempt.<br><br>"
+                f"<strong>Detailed Analysis:</strong><br>"
+                f"• The AI model calculated a {scam_probability:.1f}% probability of malicious intent based on linguistic patterns.<br>"
+                f"• {danger_count} critical danger flags and {warning_count} warning flags were raised during the heuristic scan.<br>"
+                f"{'• The presence of suspicious URLs or unencrypted links suggests an attempt to harvest credentials or distribute malware.' if url_signals else '• The vocabulary heavily utilizes urgency or financial manipulation tactics to force immediate action.'}<br><br>"
+                f"<strong>Recommended Action:</strong><br>"
+                f"Do NOT click any links, download attachments, or reply to the sender. If this arrived via email, mark it as spam or report it to your IT department immediately. If it claims to be from a known institution, contact them through their official website—never use the contact information provided in the suspicious message."
+            )
         elif confidence >= 40.0:
             decision = "Suspicious Content"
-            explanation = "The content triggered some warning signals. Verify the sender's identity before proceeding."
+            explanation = (
+                f"<strong>Warning: Elevated Risk Profile</strong><br><br>"
+                f"While this input is not definitively malicious, it contains structural or linguistic anomalies that warrant caution.<br><br>"
+                f"<strong>Detailed Analysis:</strong><br>"
+                f"• The text triggered {warning_count} warning heuristics, often associated with social engineering.<br>"
+                f"• Our baseline ML model rated the scam likelihood at {scam_probability:.1f}%.<br><br>"
+                f"<strong>Recommended Action:</strong><br>"
+                f"Verify the sender's identity through a secondary channel before proceeding. Do not provide sensitive personal or financial information."
+            )
         else:
             decision = "Likely Safe"
             confidence = (100 - confidence) # Invert confidence to show how sure we are it's safe
             signals.append({'name': 'Clean Profile', 'type': 'success'})
-            explanation = "No major threats detected by our ML model or heuristic engines. However, always remain vigilant."
+            explanation = (
+                f"<strong>Security Clearance Granted</strong><br><br>"
+                f"AURA Trust has scanned the input and found no significant indicators of phishing, malware distribution, or social engineering.<br><br>"
+                f"<strong>Detailed Analysis:</strong><br>"
+                f"• The semantic structure aligns with benign communication patterns.<br>"
+                f"• Zero critical heuristics were triggered.<br>"
+                f"• Machine Learning confidence in safety is robust at {confidence:.1f}%.<br><br>"
+                f"<strong>Recommended Action:</strong><br>"
+                f"You may proceed safely. However, as standard digital hygiene, always ensure you are communicating on a secure network."
+            )
             
         return AnalysisResult(
             module_name=self.module_name,

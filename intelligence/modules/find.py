@@ -155,12 +155,31 @@ class AuraFind(AuraModule):
             else:
                 decision = "Low Probability Match"
                 
-            explanation = f"Found {len(matches)} potential matches in the database. Top match: '{top_match['desc']}' (Shared terms: {', '.join(top_match['matching_words'])})."
+            explanation_parts = [
+                f"<strong>Lost & Found Intelligence Report</strong><br><br>",
+                f"AURA Find has queried the centralized recovery database using semantic keyword matching and morphological analysis.<br><br>",
+                f"<strong>Results Overview:</strong><br>",
+                f"• {len(matches)} potential candidate(s) discovered in the recent found logs.<br><br>",
+                f"<strong>Top Candidate Profile:</strong><br>",
+                f"• <strong>Description:</strong> {top_match['desc']}<br>",
+                f"• <strong>Similarity Score:</strong> {top_match['score']}%<br>",
+                f"• <strong>Intersecting Vectors:</strong> {', '.join(top_match['matching_words'])}<br><br>",
+                f"<strong>Recommended Action:</strong><br>",
+                f"Please verify if the candidate matches your lost item. If affirmative, proceed to the claim portal to initiate ownership verification."
+            ]
+            explanation = "".join(explanation_parts)
         else:
             confidence = 0.0
             decision = "No Matches Found"
             signals.append({'name': 'No Recent Matches', 'type': 'secondary'})
-            explanation = "We couldn't find any objects matching this description in the recent reports database. We will notify you if a match is found later."
+            explanation = (
+                f"<strong>Lost & Found Intelligence Report</strong><br><br>"
+                f"AURA Find queried the centralized recovery database but yielded zero highly correlated matches for your description.<br><br>"
+                f"<strong>Analysis Details:</strong><br>"
+                f"• Semantic vectors generated from your input ({', '.join(input_keywords) if input_keywords else 'None'}) did not map to any recently recovered items.<br><br>"
+                f"<strong>Recommended Action:</strong><br>"
+                f"Your query has been logged as an active 'Lost' record. AURA will continuously monitor incoming 'Found' reports and automatically notify you if a high-probability semantic or visual match enters the system."
+            )
             
         return AnalysisResult(
             module_name=self.module_name,

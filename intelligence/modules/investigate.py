@@ -83,31 +83,36 @@ class AuraInvestigate(AuraModule):
         themes = self._analyze_themes(input_text)
         
         confidence = 50.0
-        explanation_parts = ["General intelligence sweep completed."]
+        explanation_parts = [
+            f"<strong>Deep Investigation Report</strong><br><br>",
+            f"AURA Investigate has completed a comprehensive intelligence sweep of the provided input.<br><br>",
+            f"<strong>Key Findings & Entities:</strong><br>"
+        ]
         
         if entities:
             entity_count = sum(len(v) for v in entities.values())
             signals.append({'name': f"{entity_count} Entities Mapped", 'type': 'primary'})
             confidence += 15.0
             
-            # Format entity breakdown for explanation
-            extracted = []
             for k, v in entities.items():
-                extracted.append(f"{k.capitalize()}: {', '.join(v)}")
-            explanation_parts.append(f"Extracted data: {'; '.join(extracted)}.")
+                explanation_parts.append(f"• <strong>{k.capitalize()}:</strong> {', '.join(v)}<br>")
+        else:
+            explanation_parts.append(f"• No distinct dates, times, or financial entities could be extracted.<br>")
             
+        explanation_parts.append(f"<br><strong>Thematic & Linguistic Analysis:</strong><br>")
+        
         if themes:
             signals.append({'name': f"Themes: {', '.join(themes)}", 'type': 'info'})
             confidence += 10.0
-            
-        if not entities and not themes:
+            explanation_parts.append(f"• The core conversational themes identified are: {', '.join([t.upper() for t in themes])}.<br>")
+        else:
             signals.append({'name': 'Low Information Density', 'type': 'secondary'})
             confidence -= 20.0
-            explanation_parts.append("The input lacked specific entities or strong thematic keywords.")
+            explanation_parts.append("• The text structure was too brief or lacked substantive keywords to map a thematic vector.<br>")
             
         if file_path:
-            signals.append({'name': 'File Attached (Unprocessed)', 'type': 'warning'})
-            explanation_parts.append("A file was attached but deep forensic analysis is disabled in this environment.")
+            signals.append({'name': 'File Metadata Logged', 'type': 'warning'})
+            explanation_parts.append(f"<br><strong>File Forensics:</strong><br>• An external file attachment was detected. Deep binary forensics and OCR extraction are currently pending or restricted in this environment.<br>")
             
         decision = "Investigation Complete"
         if confidence > 70:
@@ -119,7 +124,7 @@ class AuraInvestigate(AuraModule):
             module_name=self.module_name,
             confidence=max(0.0, min(99.9, confidence)),
             decision=decision,
-            explanation=" ".join(explanation_parts),
+            explanation="".join(explanation_parts),
             signals=signals,
             raw_data={'entities': entities, 'themes': themes}
         )

@@ -90,7 +90,7 @@ def get_history():
             'input_summary': r['input_summary'],
             'module': r['detected_module'],
             'status': r['status'],
-            'date': r['created_at'].strftime('%Y-%m-%d %H:%M:%S') if r['created_at'] else None,
+            'date': r['created_at'],
             'confidence': round((r['confidence'] or 0) * 100, 1),
             'decision': r['decision']
         })

@@ -34,6 +34,14 @@ class AuraLife(AuraModule):
                 'salary_range': '$85,000 - $150,000+',
                 'growth': 'High (22% YoY)',
                 'skills': ['Python', 'SQL', 'Machine Learning', 'Data Visualization', 'Math']
+            },
+            'python': {
+                'title': 'Python Developer (Intensive Roadmap)',
+                'salary_range': '$80,000 - $140,000+',
+                'growth': 'Very High',
+                'skills': ['Python Syntax', 'OOP', 'Django/Flask', 'Data Structures', 'Algorithms'],
+                'roadmap': "Day 1: Basics (Variables, Data Types, Control Flow)<br>Day 2: Functions, Modules & Error Handling<br>Day 3: Object Oriented Programming (OOP)<br>Day 4: File Handling & Libraries (Requests, OS)<br>Day 5: Mini Project (API integration or Web Scraper)",
+                'links': "<a href='https://docs.python.org/3/tutorial/index.html' target='_blank' class='text-info'>Official Python Tutorial</a> | <a href='https://www.freecodecamp.org/learn/scientific-computing-with-python/' target='_blank' class='text-info'>freeCodeCamp Python</a>"
             }
         }
         
@@ -49,6 +57,8 @@ class AuraLife(AuraModule):
         """Determine what the user is asking about."""
         text_lower = text.lower()
         
+        if any(w in text_lower for w in ['python', 'learn python']):
+            return 'python'
         if any(w in text_lower for w in ['ai', 'ml', 'artificial intelligence', 'machine learning']):
             return 'aiml'
         if any(w in text_lower for w in ['web', 'frontend', 'backend', 'full stack', 'developer']):
@@ -88,10 +98,18 @@ class AuraLife(AuraModule):
             signals.append({'name': f"Growth: {career_info['growth']}", 'type': 'primary'})
             
             explanation = (
-                f"You asked about the {career_info['title']} path. "
-                f"The estimated salary range is {career_info['salary_range']} with {career_info['growth']} demand. "
-                f"Focus on mastering these skills: {', '.join(career_info['skills'])}."
+                f"You asked about the <strong>{career_info['title']}</strong> path.<br><br>"
+                f"<strong>Estimated Salary Range:</strong> {career_info['salary_range']}<br>"
+                f"<strong>Growth Demand:</strong> {career_info['growth']}<br><br>"
+                f"<strong>Core Skills to Master:</strong> {', '.join(career_info['skills'])}.<br><br>"
             )
+            
+            if 'roadmap' in career_info:
+                explanation += f"<strong>Intensive Study Roadmap:</strong><br>{career_info['roadmap']}<br><br>"
+            
+            if 'links' in career_info:
+                explanation += f"<strong>Study Materials:</strong><br>{career_info['links']}"
+                
             raw_data = career_info
             
         return AnalysisResult(

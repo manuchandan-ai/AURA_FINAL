@@ -57,8 +57,8 @@ def route_input(text: str = None, filename: str = None, url: str = None) -> str:
         if any(keyword in cleaned_text for keyword in ['lost', 'found', 'missing', 'stolen']):
             return 'find'
             
-        # Life keywords
-        if any(keyword in cleaned_text for keyword in ['career', 'study', 'job', 'salary', 'university', 'college']):
+        # Life keywords (Student & Career Intelligence, Learning)
+        if any(keyword in cleaned_text for keyword in ['career', 'study', 'job', 'salary', 'university', 'college', 'learn', 'roadmap', 'course', 'tutorial', 'python', 'programming', 'skills', 'guide', 'student']):
             return 'life'
             
         # Heritage keywords

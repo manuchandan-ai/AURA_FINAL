@@ -8,6 +8,17 @@ from database.db import query_db, execute_db
 
 logger = logging.getLogger(__name__)
 
+# Basic dotenv loader since pip is blocked
+def load_env():
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as f:
+            for line in f:
+                if line.strip() and not line.startswith('#'):
+                    key, val = line.strip().split('=', 1)
+                    os.environ[key] = val.strip("'\"")
+
+load_env()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 def _extract_json_from_text(text: str) -> dict:
@@ -30,7 +41,8 @@ def call_gemini(system_prompt: str, user_prompt: str) -> str:
     if not GEMINI_API_KEY:
         return "SIMULATION_MODE"
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # Use 1.5-flash for reliability and speed
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     payload = {
         "system_instruction": {
@@ -40,7 +52,8 @@ def call_gemini(system_prompt: str, user_prompt: str) -> str:
             {"parts": [{"text": user_prompt}]}
         ],
         "generationConfig": {
-            "temperature": 0.4
+            "temperature": 0.4,
+            "responseMimeType": "application/json"
         }
     }
     
@@ -48,7 +61,8 @@ def call_gemini(system_prompt: str, user_prompt: str) -> str:
     req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
     
     try:
-        with urllib.request.urlopen(req) as response:
+        # Added timeout to prevent hanging forever
+        with urllib.request.urlopen(req, timeout=15) as response:
             result = json.loads(response.read().decode('utf-8'))
             if 'candidates' in result and len(result['candidates']) > 0:
                 return result['candidates'][0]['content']['parts'][0]['text']
@@ -81,17 +95,17 @@ You can help with Travel, Career, Learn, Money, Health, Shop, Create, Project, T
 You MUST output your response in EXACT JSON format. No markdown wrappers.
 
 Instructions:
-1. If the user is asking a simple question, answer it detailedly in the "response" field.
-2. If the user is stating a goal (e.g. "I want to learn python", "I want to save money", "Help me build a project"), you MUST extract this into the "new_goal" object.
-3. If the user's request is vague and you need more info to build a roadmap, put a clarifying question in the "response" field.
-4. If you have enough info, generate a detailed markdown roadmap or plan in the "response" field.
+1. Always give highly detailed, long, and comprehensive answers in the "response" field, richly formatted with markdown. Provide deep dive explanations.
+2. If the user is stating a goal (e.g. "I want to learn python", "I want to save money", "Help me build a project", "I want to build a fitness app"), you MUST extract this into the "new_goal" object.
+3. If the user's request is vague and you need more info to build a roadmap, put a clarifying question in the "response" field, but still give an initial detailed breakdown.
+4. If you have enough info, generate a comprehensive step-by-step markdown roadmap/plan in the "response" field.
 
 JSON Schema:
 {
   "module": "AURA Learn",
   "confidence": 95,
   "decision": "Analysis Complete",
-  "response": "Detailed markdown explanation, roadmap, or question here...",
+  "response": "Detailed, comprehensive, long markdown explanation here...",
   "new_goal": {
       "title": "Learn Python", 
       "description": "Master python in 5 days",

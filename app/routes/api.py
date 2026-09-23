@@ -78,11 +78,18 @@ def chat():
     
     # 5. Handle Goals
     new_goal = result.get('new_goal')
-    if new_goal:
-        execute_db(
-            'INSERT INTO goals (user_id, title, description, roadmap) VALUES (?, ?, ?, ?)',
-            (user_id, new_goal.get('title'), new_goal.get('description'), new_goal.get('roadmap'))
-        )
+    if new_goal and isinstance(new_goal, dict):
+        try:
+            execute_db(
+                'INSERT INTO goals (user_id, title, description, roadmap) VALUES (?, ?, ?, ?)',
+                (user_id, 
+                 new_goal.get('title') or "New Goal", 
+                 new_goal.get('description') or "Goal Description", 
+                 new_goal.get('roadmap') or "")
+            )
+        except Exception as e:
+            import logging
+            logging.error(f"Failed to insert goal: {e}")
     
     return jsonify({
         'status': 'success',

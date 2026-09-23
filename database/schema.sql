@@ -133,6 +133,57 @@ CREATE TABLE IF NOT EXISTS reregistration_requests (
 );
 
 -- ============================================
+-- V2 Conversational & Goal Tracking Tables
+-- ============================================
+
+-- Conversations: Multi-turn chat sessions
+CREATE TABLE IF NOT EXISTS conversations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL DEFAULT 'New Conversation',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Messages: Individual messages within a conversation
+CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id INTEGER NOT NULL,
+    sender TEXT NOT NULL, -- 'user' or 'aura'
+    content TEXT NOT NULL,
+    metadata TEXT, -- JSON for modules used, signals, confidence
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+);
+
+-- Goals: User goals and roadmaps
+CREATE TABLE IF NOT EXISTS goals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    progress INTEGER DEFAULT 0, -- 0 to 100
+    status TEXT NOT NULL DEFAULT 'active', -- active, completed, abandoned
+    roadmap TEXT, -- JSON array of steps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Reminders: Time-based user reminders
+CREATE TABLE IF NOT EXISTS reminders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    task TEXT NOT NULL,
+    priority TEXT DEFAULT 'medium', -- low, medium, high
+    due_date TIMESTAMP,
+    is_completed INTEGER DEFAULT 0, -- 0=false, 1=true
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ============================================
 -- Seed Data: Default modules
 -- ============================================
 INSERT OR IGNORE INTO modules (name, slug, description, icon) VALUES
@@ -142,7 +193,15 @@ INSERT OR IGNORE INTO modules (name, slug, description, icon) VALUES
     ('AURA Life', 'life', 'Student & Career Intelligence', 'bi-mortarboard'),
     ('AURA Investigate', 'investigate', 'Evidence & Event Analysis', 'bi-clipboard-data'),
     ('AURA Heritage', 'heritage', 'Historical & Heritage Object Analysis', 'bi-building'),
-    ('AURA Access', 'access', 'Accessibility Layer', 'bi-universal-access');
+    ('AURA Access', 'access', 'Accessibility Layer', 'bi-universal-access'),
+    ('AURA Create', 'create', 'Generative Design & Content', 'bi-palette'),
+    ('AURA Money', 'money', 'Financial Planning & Guidance', 'bi-cash-stack'),
+    ('AURA Travel', 'travel', 'Itineraries & Exploration', 'bi-airplane'),
+    ('AURA Health', 'health', 'Wellness & Fitness Tracking', 'bi-heart-pulse'),
+    ('AURA Learn', 'learn', 'Study Plans & Skill Growth', 'bi-book'),
+    ('AURA Shop', 'shop', 'Smart Purchases & Comparisons', 'bi-cart'),
+    ('AURA Project', 'project', 'Build & Develop', 'bi-code-slash'),
+    ('AURA Future', 'future', 'Scenario Planning & Logic', 'bi-compass');
 
 -- ============================================
 -- Indexes for performance

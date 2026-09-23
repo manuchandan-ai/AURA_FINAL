@@ -1,210 +1,126 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Section 1: Hero -->
-<section class="aura-hero d-flex align-items-center text-center position-relative">
-    <div class="blackhole-container">
-        <div class="blackhole"></div>
-    </div>
-    <div class="stars-bg"></div>
-    <div class="aura-hero-bg"></div>
-    <div class="container position-relative z-1">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 aura-float">
-                <h1 class="aura-hero-title mb-3">AURA</h1>
-                <h2 class="aura-hero-subtitle text-secondary mb-4 fw-light">Adaptive Unified Reasoning Assistant</h2>
-                <p class="lead text-light mb-5 px-md-5">Multimodal AI Intelligence & Decision Support Platform</p>
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <a href="#analysis-console" class="btn aura-btn-primary btn-lg px-4 py-2 rounded-pill">Start Analysis</a>
-                    <a href="#modules" class="btn aura-btn-outline btn-lg px-4 py-2 rounded-pill">Explore Modules</a>
+<div class="aura-dashboard-container py-4">
+    <!-- HERO SECTION (ORBITAL MODULE SELECTOR) -->
+    <div class="text-center mb-5">
+        <div class="badge rounded-pill bg-purple-dark text-purple-light border border-purple px-3 py-2 mb-3">
+            <i class="bi bi-stars"></i> AURA Personal Intelligence System
+        </div>
+        <h1 class="display-5 fw-bold mb-1">Hello {% if session.get('user_id') %}{{ session.get('user_name', '').split(' ')[0] }}{% else %}Guest{% endif %},</h1>
+        <h2 class="text-secondary fw-light mb-4">What would you like to <span class="text-white">explore</span> today?</h2>
+        
+        <!-- The Orbital Ring (Visual Only for now) -->
+        <div class="aura-orbital-container mx-auto my-5 position-relative" style="width: 400px; height: 400px;">
+            <div class="orbital-center position-absolute top-50 start-50 translate-middle text-center" style="z-index: 10;">
+                <div class="rounded-circle d-flex flex-column justify-content-center align-items-center" style="width: 100px; height: 100px; background: rgba(139, 92, 246, 0.2); border: 2px solid #8b5cf6; box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);">
+                    <i class="bi bi-cpu fs-2 text-white"></i>
+                    <div class="fw-bold mt-1 small text-white">AURA</div>
                 </div>
             </div>
+            
+            <!-- Items positioned manually for the circle effect -->
+            <div class="orbital-item position-absolute text-center" style="top: 0; left: 50%; transform: translate(-50%, -50%);"><i class="bi bi-airplane text-info fs-3"></i><br><small class="text-secondary">Travel</small></div>
+            <div class="orbital-item position-absolute text-center" style="top: 15%; right: 10%; transform: translate(50%, -50%);"><i class="bi bi-briefcase text-warning fs-3"></i><br><small class="text-secondary">Career</small></div>
+            <div class="orbital-item position-absolute text-center" style="top: 50%; right: 0; transform: translate(50%, -50%);"><i class="bi bi-book text-success fs-3"></i><br><small class="text-secondary">Learn</small></div>
+            <div class="orbital-item position-absolute text-center" style="bottom: 15%; right: 10%; transform: translate(50%, 50%);"><i class="bi bi-cash-stack text-success fs-3"></i><br><small class="text-secondary">Money</small></div>
+            <div class="orbital-item position-absolute text-center" style="bottom: 0; left: 50%; transform: translate(-50%, 50%);"><i class="bi bi-heart-pulse text-danger fs-3"></i><br><small class="text-secondary">Health</small></div>
+            <div class="orbital-item position-absolute text-center" style="bottom: 15%; left: 10%; transform: translate(-50%, 50%);"><i class="bi bi-cart text-warning fs-3"></i><br><small class="text-secondary">Shop</small></div>
+            <div class="orbital-item position-absolute text-center" style="top: 50%; left: 0; transform: translate(-50%, -50%);"><i class="bi bi-shield-check text-primary fs-3"></i><br><small class="text-secondary">Trust</small></div>
+            <div class="orbital-item position-absolute text-center" style="top: 15%; left: 10%; transform: translate(-50%, -50%);"><i class="bi bi-file-earmark-text text-secondary fs-3"></i><br><small class="text-secondary">Documents</small></div>
+            
+            <!-- Rings -->
+            <div class="position-absolute top-50 start-50 translate-middle rounded-circle" style="width: 250px; height: 250px; border: 1px dashed rgba(255,255,255,0.1);"></div>
+            <div class="position-absolute top-50 start-50 translate-middle rounded-circle" style="width: 380px; height: 380px; border: 1px solid rgba(139, 92, 246, 0.2);"></div>
         </div>
     </div>
-</section>
 
-<!-- Section 2: Analysis Console -->
-<section id="analysis-console" class="aura-section">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="aura-glass aura-console p-4 p-md-5 aura-fade-in">
-                    <div class="aura-console-header d-flex align-items-center mb-4">
-                        <h3 class="m-0 fw-bold">Intelligence Console</h3>
-                        <span class="aura-status-dot ms-3" title="System Ready"></span>
-                    </div>
+    <!-- MAIN CHAT INPUT -->
+    <div class="row justify-content-center mb-5 mt-4">
+        <div class="col-lg-8">
+            <div class="aura-chat-container d-flex flex-column" id="chat-container">
+                <div id="analysis-results" class="mb-3 d-flex flex-column gap-3"></div>
+                
+                <form id="aura-form" class="mt-auto">
+                    <!-- Added conversation_id hidden field -->
+                    <input type="hidden" id="conversation_id" name="conversation_id" value="">
                     
-                    <!-- Chat-Style Input Box -->
-                    <div class="aura-chat-input-wrapper mb-4">
-                        <textarea class="form-control aura-chat-input" 
-                                  placeholder="Ask AURA anything..." 
-                                  rows="2" id="aura-input" style="resize: none;"></textarea>
+                    <div class="aura-chat-input-wrapper d-flex flex-column" style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 10px;">
+                        <textarea class="form-control text-white border-0 bg-transparent shadow-none" id="analyze_text" rows="2" placeholder="Ask AURA anything..."></textarea>
                         
-                        <div id="file-info" class="aura-file-info d-none mx-3 mb-2 p-2 rounded small text-secondary d-flex align-items-center" style="background: rgba(255,255,255,0.1);">
-                            <i class="bi bi-file-earmark-text me-2"></i>
-                            <span id="file-name" class="flex-grow-1 text-truncate"></span>
-                            <button class="btn-close btn-close-white ms-2" style="font-size: 0.5rem;" id="clear-file"></button>
-                        </div>
-                        
-                        <div id="url-container" class="mx-3 mb-2 d-none">
-                            <input type="url" id="url-input" class="form-control aura-glass-input form-control-sm" placeholder="https://...">
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center px-3 pb-2 pt-1">
-                            <div class="d-flex gap-2">
-                                <label class="btn btn-sm text-secondary hover-white p-1 m-0" title="Upload File" style="cursor:pointer;">
-                                    <i class="bi bi-paperclip fs-5"></i>
-                                    <input type="file" id="file-upload" class="d-none" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
-                                </label>
-                                <button class="btn btn-sm text-secondary hover-white p-1 m-0" id="toggle-url" title="Add URL">
-                                    <i class="bi bi-link-45deg fs-5"></i>
-                                </button>
-                                <button class="btn btn-sm text-secondary p-1 m-0" disabled title="Voice Input (Coming soon)">
-                                    <i class="bi bi-mic fs-5"></i>
-                                </button>
+                        <div class="d-flex justify-content-between align-items-center mt-2 px-2">
+                            <div class="d-flex gap-3">
+                                <button type="button" class="btn p-0 text-secondary" title="Plan my day"><i class="bi bi-calendar-event"></i> Plan</button>
+                                <button type="button" class="btn p-0 text-secondary" title="Help me learn"><i class="bi bi-book"></i> Learn</button>
+                                <button type="button" class="btn p-0 text-secondary" title="Give me ideas"><i class="bi bi-lightbulb"></i> Ideas</button>
                             </div>
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="text-secondary small d-none d-sm-inline"><span id="char-count">0</span> / 2000</span>
-                                <button id="analyze-btn" class="btn aura-btn-primary rounded-pill px-4">
-                                    BEGIN <i class="bi bi-arrow-right ms-1"></i>
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-primary rounded-circle" id="analyzeBtn" style="width: 40px; height: 40px;">
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-                    <!-- Conversational Results Area -->
-                    <div id="analysis-results" class="d-none d-flex flex-column gap-3 mt-4 pe-2" style="max-height: 60vh; overflow-y: auto; scroll-behavior: smooth;">
-                        <!-- Content injected via JS as chat bubbles -->
+    <!-- DASHBOARD PANELS -->
+    <div class="row g-4 mt-2">
+        <!-- Recent Conversations -->
+        <div class="col-lg-4">
+            <div class="card bg-transparent border border-secondary border-opacity-25 h-100" style="backdrop-filter: blur(10px); border-radius: 16px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="mb-0 fw-semibold text-white"><i class="bi bi-chat-dots me-2 text-primary"></i> Recent Conversations</h6>
+                        <a href="#" class="text-secondary small text-decoration-none">View all &rarr;</a>
+                    </div>
+                    <div class="d-flex flex-column gap-3" id="recent-conversations">
+                        <div class="text-center text-secondary small py-3">No recent conversations.</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
-
-<!-- Section 3: Module Cards -->
-<section id="modules" class="aura-section bg-opacity-10 position-relative">
-    <div class="container">
-        <h2 class="aura-section-title mb-5 aura-fade-in">Intelligence Modules</h2>
         
-        <div class="row g-4">
-            <!-- Trust -->
-            <div class="col-md-6 col-lg-4 aura-fade-in" style="transition-delay: 0.1s;">
-                <div class="aura-glass-card aura-module-card h-100 p-4" data-module="trust">
-                    <div class="aura-module-icon mb-3 text-primary"><i class="bi bi-shield-check"></i></div>
-                    <h4 class="fw-bold">AURA Trust</h4>
-                    <p class="text-secondary small">Digital Safety & Threat Analysis</p>
-                    <a href="#" class="text-decoration-none mt-auto d-inline-block pt-3">Explore <i class="bi bi-arrow-right"></i></a>
-                </div>
-            </div>
-            <!-- Verify -->
-            <div class="col-md-6 col-lg-4 aura-fade-in" style="transition-delay: 0.2s;">
-                <div class="aura-glass-card aura-module-card h-100 p-4" data-module="verify">
-                    <div class="aura-module-icon mb-3" style="color: var(--aura-module-verify);"><i class="bi bi-file-earmark-check"></i></div>
-                    <h4 class="fw-bold">AURA Verify</h4>
-                    <p class="text-secondary small">Document & Information Verification</p>
-                    <a href="#" class="text-decoration-none mt-auto d-inline-block pt-3" style="color: var(--aura-module-verify);">Explore <i class="bi bi-arrow-right"></i></a>
-                </div>
-            </div>
-            <!-- Find -->
-            <div class="col-md-6 col-lg-4 aura-fade-in" style="transition-delay: 0.3s;">
-                <div class="aura-glass-card aura-module-card h-100 p-4" data-module="find">
-                    <div class="aura-module-icon mb-3 text-info"><i class="bi bi-search"></i></div>
-                    <h4 class="fw-bold">AURA Find</h4>
-                    <p class="text-secondary small">Lost & Found Object Matching</p>
-                    <a href="#" class="text-decoration-none mt-auto d-inline-block pt-3 text-info">Explore <i class="bi bi-arrow-right"></i></a>
-                </div>
-            </div>
-            <!-- Life -->
-            <div class="col-md-6 col-lg-4 aura-fade-in" style="transition-delay: 0.4s;">
-                <div class="aura-glass-card aura-module-card h-100 p-4" data-module="life">
-                    <div class="aura-module-icon mb-3 text-success"><i class="bi bi-mortarboard"></i></div>
-                    <h4 class="fw-bold">AURA Life</h4>
-                    <p class="text-secondary small">Student & Career Intelligence</p>
-                    <a href="#" class="text-decoration-none mt-auto d-inline-block pt-3 text-success">Explore <i class="bi bi-arrow-right"></i></a>
-                </div>
-            </div>
-            <!-- Investigate -->
-            <div class="col-md-6 col-lg-4 aura-fade-in" style="transition-delay: 0.5s;">
-                <div class="aura-glass-card aura-module-card h-100 p-4" data-module="investigate">
-                    <div class="aura-module-icon mb-3 text-warning"><i class="bi bi-clipboard-data"></i></div>
-                    <h4 class="fw-bold">AURA Investigate</h4>
-                    <p class="text-secondary small">Evidence & Event Analysis</p>
-                    <a href="#" class="text-decoration-none mt-auto d-inline-block pt-3 text-warning">Explore <i class="bi bi-arrow-right"></i></a>
-                </div>
-            </div>
-            <!-- Heritage -->
-            <div class="col-md-6 col-lg-4 aura-fade-in" style="transition-delay: 0.6s;">
-                <div class="aura-glass-card aura-module-card h-100 p-4" data-module="heritage">
-                    <div class="aura-module-icon mb-3" style="color: var(--aura-module-heritage);"><i class="bi bi-building"></i></div>
-                    <h4 class="fw-bold">AURA Heritage</h4>
-                    <p class="text-secondary small">Historical & Heritage Analysis</p>
-                    <a href="#" class="text-decoration-none mt-auto d-inline-block pt-3" style="color: var(--aura-module-heritage);">Explore <i class="bi bi-arrow-right"></i></a>
+        <!-- Your Goals -->
+        <div class="col-lg-4">
+            <div class="card bg-transparent border border-secondary border-opacity-25 h-100" style="backdrop-filter: blur(10px); border-radius: 16px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="mb-0 fw-semibold text-white"><i class="bi bi-bullseye me-2 text-success"></i> Your Goals</h6>
+                        <a href="#" class="text-secondary small text-decoration-none">View all &rarr;</a>
+                    </div>
+                    <div class="d-flex flex-column gap-3" id="your-goals">
+                        <div class="text-center text-secondary small py-3">Loading goals...</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
-
-<!-- Section 4: Pipeline Visualization -->
-<section id="pipeline" class="aura-section">
-    <div class="container">
-        <h2 class="aura-section-title mb-5 aura-fade-in text-center">AURA Reasoning Pipeline</h2>
         
-        <div class="aura-pipeline d-flex flex-column flex-lg-row justify-content-between align-items-center aura-fade-in py-5">
-            <div class="aura-pipeline-stage"><i class="bi bi-eye"></i><span>Understand</span></div>
-            <div class="aura-pipeline-connector"></div>
-            <div class="aura-pipeline-stage"><i class="bi bi-cpu"></i><span>Analyze</span></div>
-            <div class="aura-pipeline-connector"></div>
-            <div class="aura-pipeline-stage"><i class="bi bi-fingerprint"></i><span>Identify</span></div>
-            <div class="aura-pipeline-connector"></div>
-            <div class="aura-pipeline-stage"><i class="bi bi-diagram-3"></i><span>Correlate</span></div>
-            <div class="aura-pipeline-connector"></div>
-            <div class="aura-pipeline-stage"><i class="bi bi-graph-up-arrow"></i><span>Predict</span></div>
-            <div class="aura-pipeline-connector"></div>
-            <div class="aura-pipeline-stage"><i class="bi bi-check-circle"></i><span>Decide</span></div>
-            <div class="aura-pipeline-connector"></div>
-            <div class="aura-pipeline-stage"><i class="bi bi-chat-text"></i><span>Explain</span></div>
-            <div class="aura-pipeline-connector"></div>
-            <div class="aura-pipeline-stage"><i class="bi bi-arrow-repeat"></i><span>Adapt</span></div>
-        </div>
-    </div>
-</section>
-
-<!-- Section 5: Stats/Features -->
-<section class="aura-section aura-stats py-5 border-top" style="border-color: var(--aura-glass-border) !important;">
-    <div class="container">
-        <div class="row text-center g-4">
-            <div class="col-6 col-md-3 aura-fade-in">
-                <div class="p-3">
-                    <i class="bi bi-grid-fill fs-2 mb-2 aura-gradient-text"></i>
-                    <h5 class="fw-bold m-0">7</h5>
-                    <div class="text-secondary small">Intelligence Modules</div>
+        <!-- Reminders & Quick Actions -->
+        <div class="col-lg-4">
+            <div class="card bg-transparent border border-secondary border-opacity-25 mb-4" style="backdrop-filter: blur(10px); border-radius: 16px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="mb-0 fw-semibold text-white"><i class="bi bi-bell me-2 text-warning"></i> Reminders</h6>
+                        <a href="#" class="text-secondary small text-decoration-none">View all &rarr;</a>
+                    </div>
+                    <div class="d-flex flex-column gap-2" id="your-reminders">
+                        <div class="text-center text-secondary small py-2">Loading reminders...</div>
+                    </div>
                 </div>
             </div>
-            <div class="col-6 col-md-3 aura-fade-in" style="transition-delay: 0.1s;">
-                <div class="p-3">
-                    <i class="bi bi-robot fs-2 mb-2 aura-gradient-text"></i>
-                    <h5 class="fw-bold m-0">Real</h5>
-                    <div class="text-secondary small">ML Models</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3 aura-fade-in" style="transition-delay: 0.2s;">
-                <div class="p-3">
-                    <i class="bi bi-layers-fill fs-2 mb-2 aura-gradient-text"></i>
-                    <h5 class="fw-bold m-0">Multimodal</h5>
-                    <div class="text-secondary small">Analysis</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3 aura-fade-in" style="transition-delay: 0.3s;">
-                <div class="p-3">
-                    <i class="bi bi-lightbulb-fill fs-2 mb-2 aura-gradient-text"></i>
-                    <h5 class="fw-bold m-0">Explainable</h5>
-                    <div class="text-secondary small">Results</div>
+            
+            <div class="card bg-transparent border border-secondary border-opacity-25" style="backdrop-filter: blur(10px); border-radius: 16px;">
+                <div class="card-body p-4">
+                    <h6 class="mb-3 fw-semibold text-white"><i class="bi bi-lightning-charge me-2 text-info"></i> Quick Actions</h6>
+                    <div class="d-flex flex-column gap-2 mt-3">
+                        <button class="btn btn-sm text-start text-secondary hover-white border-0 py-2" style="background: rgba(255,255,255,0.05);"><i class="bi bi-upload me-2"></i> Upload Document</button>
+                        <button class="btn btn-sm text-start text-secondary hover-white border-0 py-2" style="background: rgba(255,255,255,0.05);"><i class="bi bi-image me-2"></i> Analyze Image</button>
+                        <button class="btn btn-sm text-start text-secondary hover-white border-0 py-2" style="background: rgba(255,255,255,0.05);"><i class="bi bi-plus-circle me-2"></i> Add Goal</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
-
+</div>
 {% endblock %}

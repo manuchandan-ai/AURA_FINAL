@@ -28,39 +28,70 @@ def api_login_required(f):
     return decorated_function
 
 
-@api_bp.route('/analyze', methods=['POST'])
+@api_bp.route('/chat', methods=['POST'])
 @api_login_required
-def analyze():
-    """Execute the AURA intelligence pipeline."""
+def chat():
+    """Execute the AURA intelligence LLM pipeline with memory."""
     user_id = session.get('user_id')
     
     text = request.form.get('text', '').strip()
-    url = request.form.get('url', '').strip()
+    conversation_id = request.form.get('conversation_id')
     
-    filename = None
-    if 'file' in request.files:
-        file = request.files['file']
-        if file.filename:
-            filename = file.filename
-            
-    if not text and not url and not filename:
+    if not text:
         return jsonify({'status': 'error', 'message': 'No input provided.'}), 400
         
-    pipeline = IntelligencePipeline()
-    result = pipeline.process(user_id=user_id, text=text, filename=filename, url=url)
+    from database.db import query_db, execute_db
+    from intelligence.llm_core import process_chat
     
-    if result.get('status') == 'success':
-        return jsonify({
-            'status': 'success',
-            'analysis_id': result.get('analysis_id'),
-            'module': result.get('module', 'AURA Core'),
-            'confidence': result.get('confidence', 0),
-            'signals': result.get('signals', []),
-            'decision': result.get('decision', ''),
-            'explanation': result.get('explanation', '')
-        })
+    # 1. Create or verify conversation
+    if not conversation_id:
+        # Create new
+        title = text[:30] + "..." if len(text) > 30 else text
+        conversation_id = execute_db(
+            'INSERT INTO conversations (user_id, title) VALUES (?, ?)',
+            (user_id, title)
+        )
     else:
-        return jsonify(result), 500
+        # Verify ownership
+        conv = query_db('SELECT id FROM conversations WHERE id = ? AND user_id = ?', (conversation_id, user_id), one=True)
+        if not conv:
+            return jsonify({'status': 'error', 'message': 'Conversation not found.'}), 404
+            
+    # 2. Save User Message
+    execute_db(
+        'INSERT INTO messages (conversation_id, sender, content) VALUES (?, ?, ?)',
+        (conversation_id, 'user', text)
+    )
+    
+    # 3. Process LLM Logic
+    result = process_chat(user_id, conversation_id, text)
+    
+    # 4. Save AURA Message
+    execute_db(
+        'INSERT INTO messages (conversation_id, sender, content, metadata) VALUES (?, ?, ?, ?)',
+        (conversation_id, 'aura', result.get('response', ''), json.dumps({
+            'module': result.get('module'),
+            'confidence': result.get('confidence'),
+            'decision': result.get('decision')
+        }))
+    )
+    
+    # 5. Handle Goals
+    new_goal = result.get('new_goal')
+    if new_goal:
+        execute_db(
+            'INSERT INTO goals (user_id, title, description, roadmap) VALUES (?, ?, ?, ?)',
+            (user_id, new_goal.get('title'), new_goal.get('description'), new_goal.get('roadmap'))
+        )
+    
+    return jsonify({
+        'status': 'success',
+        'conversation_id': conversation_id,
+        'module': result.get('module', 'AURA Core'),
+        'confidence': result.get('confidence', 0),
+        'decision': result.get('decision', ''),
+        'explanation': result.get('response', '')
+    })
 
 
 @api_bp.route('/history', methods=['GET'])
@@ -104,3 +135,21 @@ def get_modules():
     rows = query_db('SELECT name, slug, description, icon, is_active FROM modules')
     modules = [dict(r) for r in rows]
     return jsonify({'status': 'success', 'modules': modules})
+
+@api_bp.route('/goals', methods=['GET'])
+@api_login_required
+def get_goals():
+    """Fetch user's active goals."""
+    user_id = session.get('user_id')
+    rows = query_db('SELECT id, title, description, progress, status FROM goals WHERE user_id = ? ORDER BY created_at DESC', (user_id,))
+    goals = [dict(r) for r in rows]
+    return jsonify({'status': 'success', 'goals': goals})
+    
+@api_bp.route('/reminders', methods=['GET'])
+@api_login_required
+def get_reminders():
+    """Fetch user's active reminders."""
+    user_id = session.get('user_id')
+    rows = query_db('SELECT id, task, priority, due_date FROM reminders WHERE user_id = ? AND is_completed = 0 ORDER BY due_date ASC', (user_id,))
+    reminders = [dict(r) for r in rows]
+    return jsonify({'status': 'success', 'reminders': reminders})

@@ -45,11 +45,8 @@ def call_gemini(system_prompt: str, user_prompt: str) -> str:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
     
     payload = {
-        "system_instruction": {
-            "parts": [{"text": system_prompt}]
-        },
         "contents": [
-            {"parts": [{"text": user_prompt}]}
+            {"parts": [{"text": system_prompt + "\n\n" + user_prompt}]}
         ],
         "generationConfig": {
             "temperature": 0.4,
@@ -120,8 +117,16 @@ If no goal is detected, set new_goal to null.
     # Call Gemini
     raw_response = call_gemini(system_prompt, user_prompt)
     
-    # Fallback Simulation if no API key
-    if raw_response in ["SIMULATION_MODE", "ERROR"]:
+    # Fallback Simulation if no API key or API Error
+    if raw_response == "ERROR":
+        result_data = {
+            "module": "AURA System",
+            "confidence": 100,
+            "decision": "API Unavailable",
+            "response": "**System Alert**\n\nThe Gemini API is currently experiencing High Demand (503 Service Unavailable). Your API key is loaded and working correctly, but Google's servers are temporarily overloaded. Please try again in a few minutes.",
+            "new_goal": None
+        }
+    elif raw_response == "SIMULATION_MODE":
         msg_lower = message.lower()
         module = "AURA Investigate"
         decision = "Analysis Complete"

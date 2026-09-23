@@ -98,10 +98,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('conversation_id', conversationIdInput.value);
                 }
 
+                // Add 15 second timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+
                 const response = await fetch('/api/chat', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
+                
                 const data = await response.json();
                 
                 if (data.status === 'success') {
@@ -135,7 +142,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 console.error(err);
                 const el = document.getElementById(loadingId);
-                if (el) el.outerHTML = `<div class="text-danger small p-2">Network Error. Check console.</div>`;
+                if (el) {
+                    if (err.name === 'AbortError') {
+                        el.outerHTML = `<div class="text-danger small p-2">Network Timeout: AURA took too long to respond. Please check your internet connection and try again.</div>`;
+                    } else {
+                        el.outerHTML = `<div class="text-danger small p-2">Network Error. Check console.</div>`;
+                    }
+                }
             } finally {
                 if(analyzeBtn) analyzeBtn.disabled = false;
                 if(resultsArea) resultsArea.scrollTop = resultsArea.scrollHeight;

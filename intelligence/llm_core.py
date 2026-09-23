@@ -36,130 +36,121 @@ def _extract_json_from_text(text: str) -> dict:
         logger.error(f"Failed to parse LLM JSON: {e} \nText was: {text}")
         return {}
 
-def call_gemini(system_prompt: str, user_prompt: str) -> str:
-    """Call Gemini REST API using native urllib (no pip dependencies required)."""
-    if not GEMINI_API_KEY:
-        return "SIMULATION_MODE"
+def _extract_topic(msg: str) -> str:
+    """Extract the core topic from a user's message."""
+    msg = msg.lower().strip()
+    prefixes = [
+        'i want to learn about ', 'i want to learn ', 'what is ', 'who is ', 'tell me about ',
+        'explain ', 'how to build a ', 'how to build ', 'roadmap for ', 'study materials for ',
+        'information on ', 'help me with '
+    ]
+    for prefix in prefixes:
+        if msg.startswith(prefix):
+            msg = msg[len(prefix):]
+            break
+    
+    # Remove punctuation at the end
+    msg = re.sub(r'[^\w\s]+$', '', msg)
+    return msg.strip().title()
 
-    # Use 3.6-flash
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
+def _fetch_wikipedia_summary(topic: str) -> dict:
+    """Fetch real-world data from Wikipedia REST API (100% Free, No Keys)."""
+    if not topic:
+        return None
+        
+    # Attempt direct search and some common variants
+    variants = [
+        urllib.parse.quote(topic),
+        urllib.parse.quote(topic + " (programming language)"),
+        urllib.parse.quote(topic + " (software)")
+    ]
     
-    payload = {
-        "contents": [
-            {"parts": [{"text": system_prompt + "\n\n" + user_prompt}]}
-        ],
-        "generationConfig": {
-            "temperature": 0.4,
-            "responseMimeType": "application/json"
-        }
-    }
-    
-    data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
-    
-    try:
-        # Added timeout to prevent hanging forever
-        with urllib.request.urlopen(req, timeout=15) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            if 'candidates' in result and len(result['candidates']) > 0:
-                return result['candidates'][0]['content']['parts'][0]['text']
-            return ""
-    except Exception as e:
-        logger.error(f"Gemini API Error: {e}")
-        return "ERROR"
-
-def get_conversation_history(conversation_id: int) -> str:
-    """Fetch recent messages for context."""
-    messages = query_db(
-        "SELECT sender, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC",
-        (conversation_id,)
-    )
-    history = ""
-    for msg in messages:
-        sender_name = "User" if msg['sender'] == 'user' else "AURA"
-        history += f"{sender_name}: {msg['content']}\n"
-    return history
+    for variant in variants:
+        url = f'https://en.wikipedia.org/api/rest_v1/page/summary/{variant}'
+        req = urllib.request.Request(url, headers={'User-Agent': 'AURA_Knowledge_Engine/1.0'})
+        try:
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode('utf-8'))
+                if 'extract' in data:
+                    return data
+        except Exception:
+            continue
+            
+    return None
 
 def process_chat(user_id: int, conversation_id: int, message: str) -> dict:
-    """Process a chat message, detect goals, ask questions, or provide roadmap."""
+    """Process a chat message using the Free Hybrid Knowledge Engine."""
     
-    # Get history
-    history = get_conversation_history(conversation_id)
+    msg_lower = message.lower()
+    topic = _extract_topic(message)
     
-    # Construct prompt
-    system_prompt = """You are AURA, an Adaptive Unified Reasoning Assistant.
-You can help with Travel, Career, Learn, Money, Health, Shop, Create, Project, Trust, Documents, and Life.
-You MUST output your response in EXACT JSON format. No markdown wrappers.
-
-Instructions:
-1. Always give highly detailed, long, and comprehensive answers in the "response" field, richly formatted with markdown. Provide deep dive explanations.
-2. If the user is stating a goal (e.g. "I want to learn python", "I want to save money", "Help me build a project", "I want to build a fitness app"), you MUST extract this into the "new_goal" object.
-3. If the user's request is vague and you need more info to build a roadmap, put a clarifying question in the "response" field, but still give an initial detailed breakdown.
-4. If you have enough info, generate a comprehensive step-by-step markdown roadmap/plan in the "response" field.
-
-JSON Schema:
-{
-  "module": "AURA Learn",
-  "confidence": 95,
-  "decision": "Analysis Complete",
-  "response": "Detailed, comprehensive, long markdown explanation here...",
-  "new_goal": {
-      "title": "Learn Python", 
-      "description": "Master python in 5 days",
-      "roadmap": "Day 1: Basics..." 
-  }
-}
-If no goal is detected, set new_goal to null.
-"""
-
-    user_prompt = f"Previous Conversation:\n{history}\nUser's New Message: {message}"
+    # Default fallbacks
+    module = "AURA Investigate"
+    decision = "Analysis Complete"
+    new_goal = None
+    resp_text = ""
     
-    # Call Gemini
-    raw_response = call_gemini(system_prompt, user_prompt)
-    
-    # Fallback Simulation if no API key or API Error
-    if raw_response == "ERROR":
-        result_data = {
-            "module": "AURA System",
-            "confidence": 100,
-            "decision": "API Unavailable",
-            "response": "**System Alert**\n\nThe Gemini API is currently experiencing High Demand (503 Service Unavailable). Your API key is loaded and working correctly, but Google's servers are temporarily overloaded. Please try again in a few minutes.",
+    # Check for simple conversational inputs
+    if msg_lower in ['yes', 'yeah', 'yep', 'sure']:
+        return {
+            "module": "AURA Conversational",
+            "confidence": 99,
+            "decision": "Affirmative",
+            "response": "**Excellent.** I have logged your preference. How else can I assist you today?",
             "new_goal": None
         }
-    elif raw_response == "SIMULATION_MODE":
-        msg_lower = message.lower()
-        module = "AURA Investigate"
-        decision = "Analysis Complete"
-        new_goal = None
+    elif msg_lower in ['hi', 'hello', 'hey']:
+        return {
+            "module": "AURA Conversational",
+            "confidence": 99,
+            "decision": "Greeting",
+            "response": "**Hello!** I am AURA, your advanced knowledge assistant. What would you like to learn or explore today?",
+            "new_goal": None
+        }
         
-        if "learn" in msg_lower or "python" in msg_lower or "study" in msg_lower:
+    # Detect if this is a learning/goal request
+    is_learning = any(x in msg_lower for x in ['learn', 'study', 'roadmap', 'build', 'goal', 'plan'])
+    
+    # Try fetching real data
+    wiki_data = _fetch_wikipedia_summary(topic)
+    
+    if wiki_data:
+        module = "AURA Learn" if is_learning else "AURA Encyclopedia"
+        desc = wiki_data.get('description', 'Fascinating subject')
+        extract = wiki_data.get('extract', '')
+        url = wiki_data.get('content_urls', {}).get('desktop', {}).get('page', f'https://en.wikipedia.org/wiki/{topic}')
+        
+        resp_text = f"### Knowledge Engine Analysis: **{topic}**\n\n"
+        resp_text += f"> {desc.capitalize()}\n\n"
+        resp_text += f"{extract}\n\n"
+        resp_text += f"[📖 Read full Wikipedia Article]({url})\n\n"
+        
+        if is_learning:
+            decision = "Goal Detected"
+            new_goal = {
+                "title": f"Master {topic}",
+                "description": f"Comprehensive study plan for {topic}",
+                "roadmap": f"**Phase 1: Foundations**\n- Understand the history and core concepts of {topic}.\n- Read introductory materials and set up your workspace.\n\n**Phase 2: Deep Dive**\n- Practice core principles.\n- Build your first mini-project related to {topic}.\n\n**Phase 3: Advanced Mastery**\n- Explore advanced topics and edge cases.\n- Share your knowledge with the community."
+            }
+            resp_text += "---\n### 🚀 Suggested Learning Roadmap\n\nI have automatically generated a goal and roadmap for you to master this subject. You will find it in your Quick Actions or Goals dashboard.\n\n"
+            resp_text += new_goal['roadmap']
+            
+    else:
+        # Fallback if topic is unknown or too vague
+        if is_learning:
             module = "AURA Learn"
-            if "want to" in msg_lower or "plan" in msg_lower or "goal" in msg_lower:
-                decision = "Goal Detected"
-                new_goal = {
-                    "title": "Master " + ("Python" if "python" in msg_lower else "New Skill"),
-                    "description": "An intensive roadmap to master the subject.",
-                    "roadmap": "• Phase 1: Fundamentals\n• Phase 2: Practical Application\n• Phase 3: Advanced Concepts"
-                }
-                resp_text = f"**I have added a new goal to your dashboard.**\n\nHere is a high-level roadmap to get you started:\n\n{new_goal['roadmap']}\n\nWould you like me to schedule reminders for these phases?"
-            else:
-                resp_text = "**Learning Analysis**\n\nI can help you study effectively. Please tell me your exact timeline and current skill level so I can generate a personalized roadmap."
-                
+            decision = "Clarification Needed"
+            resp_text = f"**Learning Module Active**\n\nI see you want to learn about **{topic or 'this subject'}**. To generate a highly tailored curriculum and roadmap, could you provide a bit more detail about your current skill level?"
         elif "remind" in msg_lower or "task" in msg_lower:
             module = "AURA Productivity"
-            resp_text = "**Reminder System**\n\nI can schedule that for you. When exactly would you like to be reminded?"
-            
+            resp_text = "**Productivity Engine**\n\nI can certainly schedule that. When exactly would you like the reminder to trigger?"
         else:
-            resp_text = f"**Intelligence Report**\n\nI have analyzed your input: '{message}'.\n\nI am AURA. To unlock my full potential, please add a `GEMINI_API_KEY` to the environment variables so I can process deep multi-turn reasoning natively."
+            resp_text = f"**AURA Intelligence**\n\nI have analyzed your input: '{message}'.\n\nWhile I don't have a specific Wikipedia entry for this exact phrase, I am ready to help you break this down into actionable steps. What is your ultimate goal here?"
 
-        result_data = {
-            "module": module,
-            "confidence": 85,
-            "decision": decision,
-            "response": resp_text,
-            "new_goal": new_goal
-        }
-    else:
-        result_data = _extract_json_from_text(raw_response)
-        
-    return result_data
+    return {
+        "module": module,
+        "confidence": 95,
+        "decision": decision,
+        "response": resp_text,
+        "new_goal": new_goal
+    }

@@ -41,8 +41,8 @@ def call_gemini(system_prompt: str, user_prompt: str) -> str:
     if not GEMINI_API_KEY:
         return "SIMULATION_MODE"
 
-    # Use 1.5-flash for reliability and speed
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # Use 3.6-flash
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
     
     payload = {
         "system_instruction": {

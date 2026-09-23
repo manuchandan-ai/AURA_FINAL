@@ -202,5 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/\n/g, '<br>');
         return html;
     }
-
 });
+
+// Expose quickAction to global scope for onclick handlers
+window.quickAction = function(text) {
+    const chatInput = document.getElementById('analyze_text');
+    const chatForm = document.getElementById('aura-form');
+    if (chatInput && chatForm) {
+        chatInput.value = text;
+        chatInput.focus();
+    }
+};

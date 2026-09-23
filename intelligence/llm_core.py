@@ -36,121 +36,80 @@ def _extract_json_from_text(text: str) -> dict:
         logger.error(f"Failed to parse LLM JSON: {e} \nText was: {text}")
         return {}
 
-def _extract_topic(msg: str) -> str:
-    """Extract the core topic from a user's message."""
-    msg = msg.lower().strip()
-    prefixes = [
-        'i want to learn about ', 'i want to learn ', 'what is ', 'who is ', 'tell me about ',
-        'explain ', 'how to build a ', 'how to build ', 'roadmap for ', 'study materials for ',
-        'information on ', 'help me with '
-    ]
-    for prefix in prefixes:
-        if msg.startswith(prefix):
-            msg = msg[len(prefix):]
-            break
+def call_free_ai(system_prompt: str, user_prompt: str) -> str:
+    """Call Pollinations AI free tier (No API Key Required)."""
+    url = 'https://text.pollinations.ai/'
+    payload = {
+        'messages': [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': user_prompt}
+        ],
+        'jsonMode': True
+    }
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
     
-    # Remove punctuation at the end
-    msg = re.sub(r'[^\w\s]+$', '', msg)
-    return msg.strip().title()
+    try:
+        with urllib.request.urlopen(req, timeout=15) as response:
+            return response.read().decode('utf-8')
+    except Exception as e:
+        logger.error(f"Free AI API Error: {e}")
+        return "ERROR"
 
-def _fetch_wikipedia_summary(topic: str) -> dict:
-    """Fetch real-world data from Wikipedia REST API (100% Free, No Keys)."""
-    if not topic:
-        return None
-        
-    # Attempt direct search and some common variants
-    variants = [
-        urllib.parse.quote(topic),
-        urllib.parse.quote(topic + " (programming language)"),
-        urllib.parse.quote(topic + " (software)")
-    ]
-    
-    for variant in variants:
-        url = f'https://en.wikipedia.org/api/rest_v1/page/summary/{variant}'
-        req = urllib.request.Request(url, headers={'User-Agent': 'AURA_Knowledge_Engine/1.0'})
-        try:
-            with urllib.request.urlopen(req, timeout=5) as response:
-                data = json.loads(response.read().decode('utf-8'))
-                if 'extract' in data:
-                    return data
-        except Exception:
-            continue
-            
-    return None
+def get_conversation_history(conversation_id: int) -> str:
+    """Fetch recent messages for context."""
+    messages = query_db(
+        "SELECT sender, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC",
+        (conversation_id,)
+    )
+    history = ""
+    for msg in messages:
+        sender_name = "User" if msg['sender'] == 'user' else "AURA"
+        history += f"{sender_name}: {msg['content']}\n"
+    return history
 
 def process_chat(user_id: int, conversation_id: int, message: str) -> dict:
-    """Process a chat message using the Free Hybrid Knowledge Engine."""
+    """Process a chat message using the Free AI Engine."""
     
-    msg_lower = message.lower()
-    topic = _extract_topic(message)
+    history = get_conversation_history(conversation_id)
     
-    # Default fallbacks
-    module = "AURA Investigate"
-    decision = "Analysis Complete"
-    new_goal = None
-    resp_text = ""
-    
-    # Check for simple conversational inputs
-    if msg_lower in ['yes', 'yeah', 'yep', 'sure']:
-        return {
-            "module": "AURA Conversational",
-            "confidence": 99,
-            "decision": "Affirmative",
-            "response": "**Excellent.** I have logged your preference. How else can I assist you today?",
-            "new_goal": None
-        }
-    elif msg_lower in ['hi', 'hello', 'hey']:
-        return {
-            "module": "AURA Conversational",
-            "confidence": 99,
-            "decision": "Greeting",
-            "response": "**Hello!** I am AURA, your advanced knowledge assistant. What would you like to learn or explore today?",
-            "new_goal": None
-        }
-        
-    # Detect if this is a learning/goal request
-    is_learning = any(x in msg_lower for x in ['learn', 'study', 'roadmap', 'build', 'goal', 'plan'])
-    
-    # Try fetching real data
-    wiki_data = _fetch_wikipedia_summary(topic)
-    
-    if wiki_data:
-        module = "AURA Learn" if is_learning else "AURA Encyclopedia"
-        desc = wiki_data.get('description', 'Fascinating subject')
-        extract = wiki_data.get('extract', '')
-        url = wiki_data.get('content_urls', {}).get('desktop', {}).get('page', f'https://en.wikipedia.org/wiki/{topic}')
-        
-        resp_text = f"### Knowledge Engine Analysis: **{topic}**\n\n"
-        resp_text += f"> {desc.capitalize()}\n\n"
-        resp_text += f"{extract}\n\n"
-        resp_text += f"[📖 Read full Wikipedia Article]({url})\n\n"
-        
-        if is_learning:
-            decision = "Goal Detected"
-            new_goal = {
-                "title": f"Master {topic}",
-                "description": f"Comprehensive study plan for {topic}",
-                "roadmap": f"**Phase 1: Foundations**\n- Understand the history and core concepts of {topic}.\n- Read introductory materials and set up your workspace.\n\n**Phase 2: Deep Dive**\n- Practice core principles.\n- Build your first mini-project related to {topic}.\n\n**Phase 3: Advanced Mastery**\n- Explore advanced topics and edge cases.\n- Share your knowledge with the community."
-            }
-            resp_text += "---\n### 🚀 Suggested Learning Roadmap\n\nI have automatically generated a goal and roadmap for you to master this subject. You will find it in your Quick Actions or Goals dashboard.\n\n"
-            resp_text += new_goal['roadmap']
-            
-    else:
-        # Fallback if topic is unknown or too vague
-        if is_learning:
-            module = "AURA Learn"
-            decision = "Clarification Needed"
-            resp_text = f"**Learning Module Active**\n\nI see you want to learn about **{topic or 'this subject'}**. To generate a highly tailored curriculum and roadmap, could you provide a bit more detail about your current skill level?"
-        elif "remind" in msg_lower or "task" in msg_lower:
-            module = "AURA Productivity"
-            resp_text = "**Productivity Engine**\n\nI can certainly schedule that. When exactly would you like the reminder to trigger?"
-        else:
-            resp_text = f"**AURA Intelligence**\n\nI have analyzed your input: '{message}'.\n\nWhile I don't have a specific Wikipedia entry for this exact phrase, I am ready to help you break this down into actionable steps. What is your ultimate goal here?"
+    system_prompt = """You are AURA, an Adaptive Unified Reasoning Assistant.
+You can help with Travel, Career, Learn, Money, Health, Shop, Create, Project, Trust, Documents, and Life.
+You MUST output your response in EXACT JSON format. No markdown wrappers.
 
-    return {
-        "module": module,
-        "confidence": 95,
-        "decision": decision,
-        "response": resp_text,
-        "new_goal": new_goal
-    }
+Instructions:
+1. Always give highly detailed, long, and comprehensive answers in the "response" field, richly formatted with markdown. Provide deep dive explanations.
+2. If the user is stating a goal (e.g. "I want to learn python", "I want to save money", "Help me build a project", "I want to build a fitness app"), you MUST extract this into the "new_goal" object.
+3. If the user's request is vague and you need more info to build a roadmap, put a clarifying question in the "response" field, but still give an initial detailed breakdown.
+4. If you have enough info, generate a comprehensive step-by-step markdown roadmap/plan in the "response" field.
+5. If the user asks a simple question, answer it thoroughly.
+
+JSON Schema:
+{
+  "module": "AURA Learn",
+  "confidence": 95,
+  "decision": "Analysis Complete",
+  "response": "Detailed, comprehensive, long markdown explanation here...",
+  "new_goal": {
+      "title": "Learn Python", 
+      "description": "Master python in 5 days",
+      "roadmap": "Day 1: Basics..." 
+  }
+}
+If no goal is detected, set new_goal to null.
+"""
+    
+    user_prompt = f"Previous Conversation:\n{history}\nUser's New Message: {message}"
+    
+    raw_response = call_free_ai(system_prompt, user_prompt)
+    
+    if raw_response == "ERROR":
+        return {
+            "module": "AURA System",
+            "confidence": 100,
+            "decision": "API Unavailable",
+            "response": "**System Alert**\n\nThe Free AI Engine is currently unreachable due to network issues. Please try again.",
+            "new_goal": None
+        }
+        
+    return _extract_json_from_text(raw_response)

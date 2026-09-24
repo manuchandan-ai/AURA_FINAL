@@ -37,23 +37,27 @@ def _extract_json_from_text(text: str) -> dict:
         return {}
 
 def call_free_ai(system_prompt: str, user_prompt: str) -> str:
-    """Call Pollinations AI free tier (No API Key Required)."""
-    url = 'https://text.pollinations.ai/'
+    """Call Local Ollama API (No API Key Required)."""
+    url = 'http://localhost:11434/api/chat'
     payload = {
+        'model': 'qwen3:8b',
         'messages': [
             {'role': 'system', 'content': system_prompt},
             {'role': 'user', 'content': user_prompt}
         ],
-        'jsonMode': True
+        'stream': False,
+        'format': 'json'
     }
     data = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
     
     try:
-        with urllib.request.urlopen(req, timeout=15) as response:
-            return response.read().decode('utf-8')
+        # 120 second timeout since local models on CPU can take time
+        with urllib.request.urlopen(req, timeout=120) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            return result['message']['content']
     except Exception as e:
-        logger.error(f"Free AI API Error: {e}")
+        logger.error(f"Ollama API Error: {e}")
         return "ERROR"
 
 def get_conversation_history(conversation_id: int) -> str:
@@ -108,7 +112,7 @@ If no goal is detected, set new_goal to null.
             "module": "AURA System",
             "confidence": 100,
             "decision": "API Unavailable",
-            "response": "**System Alert**\n\nThe Free AI Engine is currently unreachable due to network issues. Please try again.",
+            "response": "**System Alert**\n\nThe local Ollama Engine is currently unreachable or timed out. Please ensure Ollama is running in the background with the `qwen3:8b` model installed.",
             "new_goal": None
         }
         

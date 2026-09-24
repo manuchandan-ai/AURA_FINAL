@@ -98,9 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('conversation_id', conversationIdInput.value);
                 }
 
-                // Add 15 second timeout
+                // Add 120 second timeout for local Ollama
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                const timeoutId = setTimeout(() => controller.abort(), 120000);
 
                 const response = await fetch('/api/chat', {
                     method: 'POST',
